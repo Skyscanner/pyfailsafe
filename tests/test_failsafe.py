@@ -2,7 +2,9 @@ import asyncio
 import aiohttp
 import unittest
 
-from failsafe import RetryPolicy, FailSafe, CircuitOpen, CircuitBreaker, NoMoreFallbacks
+import pytest
+
+from failsafe import RetryPolicy, FailSafe, CircuitOpen, CircuitBreaker, RetriesExhausted
 
 
 class SomeRetriableException(Exception):
@@ -31,7 +33,7 @@ class TestFailSafe(unittest.TestCase):
             loop.run_until_complete(
                 FailSafe().run(lambda: get_coroutine(url))
             )
-        except NoMoreFallbacks:
+        except RetriesExhausted:
             pass
 
     def test_basic_retry(self):
@@ -40,7 +42,7 @@ class TestFailSafe(unittest.TestCase):
             loop.run_until_complete(
                 FailSafe(retry_policy=policy).run(lambda: get_coroutine(url))
             )
-        except NoMoreFallbacks:
+        except RetriesExhausted:
             pass
 
     def test_retry_once(self):
@@ -53,7 +55,7 @@ class TestFailSafe(unittest.TestCase):
             loop.run_until_complete(
                 failsafe.run(lambda: get_coroutine(broken_url))
             )
-        except NoMoreFallbacks:
+        except RetriesExhausted:
             pass
 
         assert failsafe.context.attempts == expected_attempts
@@ -69,7 +71,7 @@ class TestFailSafe(unittest.TestCase):
             loop.run_until_complete(
                 failsafe.run(lambda: get_coroutine(broken_url))
             )
-        except NoMoreFallbacks:
+        except RetriesExhausted:
             pass
 
         assert failsafe.context.attempts == expected_attempts
@@ -84,67 +86,16 @@ class TestFailSafe(unittest.TestCase):
             loop.run_until_complete(
                 failsafe.run(lambda: get_coroutine(broken_url))
             )
-        except NoMoreFallbacks:
+        except RetriesExhausted:
             pass
 
         assert failsafe.context.attempts == retries + 1
 
-    def test_fallback(self):
-        policy = RetryPolicy(1, SomeRetriableException)
-
-        def fallback(): return get_coroutine('http://httpbin.org/get')
-
-        loop.run_until_complete(
-            FailSafe(retry_policy=policy).with_fallback(fallback).run(lambda: get_coroutine(broken_url))
-        )
-
     def test_circuit_breaker(self):
-        try:
+        with pytest.raises(CircuitOpen):
             policy = RetryPolicy(5, SomeRetriableException)
-            circuit_breaker = CircuitBreaker()
+            circuit_breaker = CircuitBreaker(maximum_failures=2)
             loop.run_until_complete(
                 FailSafe(retry_policy=policy)
                 .run(lambda: get_coroutine(broken_url), circuit_breaker)
             )
-        except CircuitOpen:
-            pass
-
-        assert len(circuit_breaker.failures) == 1
-
-    def test_fallback_circuit_breaker(self):
-        try:
-            policy = RetryPolicy(5, SomeRetriableException)
-            fallback_circuit_breaker = CircuitBreaker()
-
-            def fallback(): return get_coroutine(broken_url)
-
-            loop.run_until_complete(
-                FailSafe(retry_policy=policy)
-                .with_fallback(fallback, fallback_circuit_breaker)
-                .run(lambda: get_coroutine(broken_url))
-            )
-        except CircuitOpen:
-            pass
-
-        assert len(fallback_circuit_breaker.failures) == 1
-
-    def test_both_circuit_breakers(self):
-        retries = 5
-        policy = RetryPolicy(retries, SomeRetriableException)
-        threshold = 4
-        circuit_breaker = CircuitBreaker(threshold=threshold)
-        fallback_circuit_breaker = CircuitBreaker()
-
-        def fallback(): return get_coroutine(broken_url)
-
-        try:
-            loop.run_until_complete(
-                FailSafe(retry_policy=policy)
-                .with_fallback(fallback, fallback_circuit_breaker)
-                .run(lambda: get_coroutine(broken_url), circuit_breaker)
-            )
-        except CircuitOpen:
-            pass
-
-        assert len(circuit_breaker.failures) == threshold + 1
-        assert len(fallback_circuit_breaker.failures) == 1
