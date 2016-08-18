@@ -14,16 +14,11 @@ class RetryPolicy:
 
 class FailSafe:
 
-    def __init__(self):
+    def __init__(self, retry_policy=None):
         self.context = Context()
-        self.try_again_fallback = None
+        self.retry_policy = retry_policy or RetryPolicy(0)
         self.fallback_callable = None
         self.fallback_circuit_breaker = None
-        self.retry_policy = None
-
-    def with_retry_policy(self, policy):
-        self.retry_policy = policy
-        return self
 
     def with_fallback(self, fallback_callable, circuit_breaker=None):
         self.fallback_callable = fallback_callable
@@ -80,7 +75,8 @@ class CircuitBreaker:
         if not self.failures:
             return True
 
-        failures_in_last_second = [x for x in self.failures if x >= datetime.datetime.now() - datetime.timedelta(seconds=10)]
+        failures_in_last_second = [x for x in self.failures
+                                   if x >= datetime.datetime.now() - datetime.timedelta(seconds=10)]
         return len(failures_in_last_second) <= self.threshold
 
     def record_success(self):
