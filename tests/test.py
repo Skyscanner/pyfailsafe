@@ -37,7 +37,7 @@ class TestFailSafe:
         try:
             policy = RetryPolicy()
             loop.run_until_complete(
-                FailSafe().with_retry_policy(policy).run(lambda: get_events(url))
+                FailSafe(retry_policy=policy).run(lambda: get_events(url))
             )
         except NoMoreFallbacks:
             pass
@@ -46,53 +46,53 @@ class TestFailSafe:
         expected_attempts = 2
         retries = 1
         policy = RetryPolicy(retries)
-        tryagain = FailSafe()
-        assert tryagain.context.attempts == 0
+        failsafe = FailSafe(retry_policy=policy)
+        assert failsafe.context.attempts == 0
         try:
             loop.run_until_complete(
-                tryagain.with_retry_policy(policy).run(lambda: get_events(broken_url))
+                failsafe.run(lambda: get_events(broken_url))
             )
         except NoMoreFallbacks:
             pass
 
-        assert tryagain.context.attempts == expected_attempts
+        assert failsafe.context.attempts == expected_attempts
 
     def test_retry_four_times(self):
         expected_attempts = 5
         retries = 4
         policy = RetryPolicy(retries)
-        tryagain = FailSafe()
-        assert tryagain.context.attempts == 0
+        failsafe = FailSafe(retry_policy=policy)
+        assert failsafe.context.attempts == 0
 
         try:
             loop.run_until_complete(
-                tryagain.with_retry_policy(policy).run(lambda: get_events(broken_url))
+                failsafe.run(lambda: get_events(broken_url))
             )
         except NoMoreFallbacks:
             pass
 
-        assert tryagain.context.attempts == expected_attempts
+        assert failsafe.context.attempts == expected_attempts
 
     def test_retry_on_custom_exception(self):
         retries = 3
         policy = RetryPolicy(retries, SomeRetriableException)
-        tryagain = FailSafe()
-        assert tryagain.context.attempts == 0
+        failsafe = FailSafe(retry_policy=policy)
+        assert failsafe.context.attempts == 0
 
         try:
             loop.run_until_complete(
-                tryagain.with_retry_policy(policy).run(lambda: get_events(broken_url))
+                failsafe.run(lambda: get_events(broken_url))
             )
         except NoMoreFallbacks:
             pass
 
-        assert tryagain.context.attempts == retries + 1
+        assert failsafe.context.attempts == retries + 1
 
     def test_fallback(self):
         policy = RetryPolicy(1, SomeRetriableException)
         fallback = lambda: get_events('http://httpbin.org/get')
         loop.run_until_complete(
-            FailSafe().with_retry_policy(policy).with_fallback(fallback).run(lambda: get_events(broken_url))
+            FailSafe(retry_policy=policy).with_fallback(fallback).run(lambda: get_events(broken_url))
         )
 
     def test_circuit_breaker(self):
@@ -100,8 +100,7 @@ class TestFailSafe:
             policy = RetryPolicy(5, SomeRetriableException)
             circuit_breaker = CircuitBreaker()
             loop.run_until_complete(
-                FailSafe()
-                    .with_retry_policy(policy)
+                FailSafe(retry_policy=policy)
                     .run(lambda: get_events('http://httpbin.org/getbrooooken'), circuit_breaker)
             )
         except CircuitOpen:
@@ -115,9 +114,8 @@ class TestFailSafe:
             fallback_circuit_breaker = CircuitBreaker()
             fallback = lambda: get_events(broken_url)
             loop.run_until_complete(
-                FailSafe()
+                FailSafe(retry_policy=policy)
                     .with_fallback(fallback, fallback_circuit_breaker)
-                    .with_retry_policy(policy)
                     .run(lambda: get_events(broken_url))
             )
         except CircuitOpen:
@@ -134,9 +132,8 @@ class TestFailSafe:
         fallback = lambda: get_events(broken_url)
         try:
             loop.run_until_complete(
-                FailSafe()
+                FailSafe(retry_policy=policy)
                     .with_fallback(fallback, fallback_circuit_breaker)
-                    .with_retry_policy(policy)
                     .run(lambda: get_events(broken_url), circuit_breaker)
             )
         except CircuitOpen:

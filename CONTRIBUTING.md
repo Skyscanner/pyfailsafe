@@ -1,0 +1,1 @@
+The author of this repo has not set a contributing guide yet.
