@@ -1,5 +1,5 @@
 import aiohttp
-from failsafe import Failsafe, RetryPolicy, CircuitBreaker, RetriesExhausted, CircuitOpen
+from failsafe import AsyncHttpFailsafe
 
 
 class PsaAPI:
@@ -7,22 +7,11 @@ class PsaAPI:
         self.path = "/v1/relevance/partner/{0}/market/{1}/device/{2}/hotel/{3}"
         self.endpoint_main = "http://hbe-psa.eu-west-1.prod.aws.skyscanner.local"
         self.endpoint_secondary = "http://hbe-psa.eu-central-1.prod.aws.skyscanner.local"
-
-        policy = RetryPolicy(allowed_retries=4)
-
-        circuit_breaker = CircuitBreaker(maximum_failures=2)
-        self.failsafe = Failsafe(retry_policy=policy, circuit_breaker=circuit_breaker)
-
-        circuit_breaker_backup = CircuitBreaker(maximum_failures=2)
-        self.failsafe_backup = Failsafe(retry_policy=policy, circuit_breaker=circuit_breaker_backup)
+        self.failsafe = AsyncHttpFailsafe([self.endpoint_main, self.endpoint_secondary])
 
     async def get_deal(self, partner, market, device, hotel_id):
-        url = self.endpoint_main + self.path.format(partner, market, device, hotel_id)
-        try:
-            return await self.failsafe.run(lambda: self._request(url))
-        except (RetriesExhausted, CircuitOpen):
-            url = self.endpoint_secondary + self.path.format(partner, market, device, hotel_id)
-            return await self.failsafe_backup.run(lambda: self._request(url))
+        query_path = self.path.format(partner, market, device, hotel_id)
+        return await self.failsafe.run(self._request, query_path)
 
     async def _request(self, url):
         with aiohttp.ClientSession() as session:
@@ -30,6 +19,7 @@ class PsaAPI:
                 if resp.status != 200:
                     raise Exception()
                 return await resp.json()
+
 
 if __name__ == "__main__":
 
