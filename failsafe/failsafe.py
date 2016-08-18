@@ -1,9 +1,12 @@
 from collections import OrderedDict
 from urllib.parse import urljoin
+import logging
 
 from failsafe.circuit_breaker import AlwaysClosedCircuitBreaker
 from failsafe.retry_policy import RetryPolicy
 from failsafe.circuit_breaker import CircuitBreaker
+
+logger = logging.getLogger(__name__)
 
 
 class AsyncHttpFailsafe:
@@ -20,8 +23,8 @@ class AsyncHttpFailsafe:
             url = urljoin(base_url, query_path)
             try:
                 return await _failsafe.run(lambda: fn(url, *args, **kwargs))
-            except (RetriesExhausted, CircuitOpen):
-                pass
+            except FailsafeError:
+                logging.debug("Executing fallback callable")
 
 
 class FailsafeError(Exception):
@@ -55,6 +58,7 @@ class Failsafe:
 
         while retry:
             if not self.circuit_breaker.allows_execution():
+                logger.debug("Circuit open, stopping execution")
                 raise CircuitOpen()
 
             try:
@@ -67,5 +71,8 @@ class Failsafe:
                 context.errors += 1
                 retry = self.retry_policy.should_retry(context, e)
                 self.circuit_breaker.record_failure()
+
+                if retry:
+                    logger.debug("Retrying call")
 
         raise RetriesExhausted()
