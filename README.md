@@ -6,12 +6,12 @@ Failsafe Python implementation
 
 ## Installation
 
-The **pyfailsage** package is hosted on PyPI repository on Artifactory
+The **pyfailsafe** package is hosted on PyPI repository on Artifactory
 
 Take dependency on this library by adding the following lines to your requirements.txt file:
 
     --extra-index-url https://repository.prod.aws.skyscnr.com/artifactory/api/pypi/pypi/simple
-    pyfailsage~=X.X.X
+    pyfailsafe~=X.X.X
 
 **Make sure that you are connected to VPN when accessing Artifactory. Being on office network is not enough.**
     
@@ -31,6 +31,6 @@ Unit tests are written using pytest and can be run from the root of the project 
 
 Coding standards are maintained using the flake8 tool which will run as part of the build process. To run locally simply use:
 
-    flake8 pyfailsafe/ tests/
+    flake8 failsafe/ tests/
 
 Merge requests which do not have passing tests or flake8 will not be accepted.
