@@ -4,6 +4,7 @@ from failsafe.circuit_breaker import CircuitBreaker
 
 
 class TestCircuitBreaker:
+
     def test_initial_state_is_closed(self):
         circuit_breaker = CircuitBreaker()
         assert circuit_breaker.current_state == 'closed'
