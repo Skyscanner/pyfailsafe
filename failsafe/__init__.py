@@ -1,1 +1,1 @@
-from .failsafe import RetryPolicy, FailSafe, CircuitOpen, CircuitBreaker, NoMoreFallbacks  # noqa
+from .failsafe import RetryPolicy, FailSafe, CircuitOpen, CircuitBreaker, RetriesExhausted  # noqa

@@ -1,5 +1,7 @@
 import datetime
 
+from failsafe.circuit_breaker import AlwaysClosedCircuitBreaker
+
 
 class RetryPolicy:
 
@@ -14,22 +16,13 @@ class RetryPolicy:
 
 class FailSafe:
 
-    def __init__(self, retry_policy=None):
+    def __init__(self, retry_policy=None, circuit_breaker=None):
         self.context = Context()
         self.retry_policy = retry_policy or RetryPolicy(0)
-        self.fallback_callable = None
-        self.fallback_circuit_breaker = None
-
-    def with_fallback(self, fallback_callable, circuit_breaker=None):
-        self.fallback_callable = fallback_callable
-        self.fallback_circuit_breaker = circuit_breaker
-        return self
+        self.circuit_breaker = circuit_breaker or AlwaysClosedCircuitBreaker()
 
     async def run(self, callable, circuit_breaker=None):
         callables = [(callable, circuit_breaker)]
-        if self.fallback_callable is not None:
-            callables.append((self.fallback_callable, self.fallback_circuit_breaker))
-
         while callables:
             callable, circuit_breaker = callables.pop(0)
             retry = True
@@ -57,7 +50,7 @@ class FailSafe:
                     if circuit_breaker:
                         circuit_breaker.record_failure()
 
-        raise NoMoreFallbacks()
+        raise RetriesExhausted()
 
 
 class CircuitOpen(Exception):
@@ -93,5 +86,5 @@ class Context(object):
         self.errors = 0
 
 
-class NoMoreFallbacks(Exception):
+class RetriesExhausted(Exception):
     pass
