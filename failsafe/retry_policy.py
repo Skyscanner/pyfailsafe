@@ -9,4 +9,3 @@ class RetryPolicy:
 
     def _is_expected_exception(self, exception):
         return any(isinstance(exception, e) for e in self.retriable_exceptions) if self.retriable_exceptions else True
-
