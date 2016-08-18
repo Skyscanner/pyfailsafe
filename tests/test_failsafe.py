@@ -1,5 +1,4 @@
 import asyncio
-import aiohttp
 import unittest
 
 import pytest
@@ -11,39 +10,28 @@ class SomeRetriableException(Exception):
     pass
 
 
-async def get_coroutine(url):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as resp:
-            # print(resp.status)
-            if resp.status != 200:
-                raise SomeRetriableException()
-            return await resp.json()
+async def successful_operation():
+    return 1
+
+async def failing_operation():
+    raise SomeRetriableException()
 
 
 loop = asyncio.get_event_loop()
-
-url = 'http://httpbin.org/get'
-broken_url = 'http://httpbin.org/getbrooooken'
 
 
 class TestFailSafe(unittest.TestCase):
 
     def test_no_retry(self):
-        try:
-            loop.run_until_complete(
-                FailSafe().run(lambda: get_coroutine(url))
-            )
-        except RetriesExhausted:
-            pass
+        loop.run_until_complete(
+            FailSafe().run(successful_operation)
+        )
 
     def test_basic_retry(self):
-        try:
-            policy = RetryPolicy()
-            loop.run_until_complete(
-                FailSafe(retry_policy=policy).run(lambda: get_coroutine(url))
-            )
-        except RetriesExhausted:
-            pass
+        policy = RetryPolicy()
+        loop.run_until_complete(
+            FailSafe(retry_policy=policy).run(successful_operation)
+        )
 
     def test_retry_once(self):
         expected_attempts = 2
@@ -51,12 +39,10 @@ class TestFailSafe(unittest.TestCase):
         policy = RetryPolicy(retries)
         failsafe = FailSafe(retry_policy=policy)
         assert failsafe.context.attempts == 0
-        try:
+        with pytest.raises(RetriesExhausted):
             loop.run_until_complete(
-                failsafe.run(lambda: get_coroutine(broken_url))
+                failsafe.run(failing_operation)
             )
-        except RetriesExhausted:
-            pass
 
         assert failsafe.context.attempts == expected_attempts
 
@@ -67,12 +53,10 @@ class TestFailSafe(unittest.TestCase):
         failsafe = FailSafe(retry_policy=policy)
         assert failsafe.context.attempts == 0
 
-        try:
+        with pytest.raises(RetriesExhausted):
             loop.run_until_complete(
-                failsafe.run(lambda: get_coroutine(broken_url))
+                failsafe.run(failing_operation)
             )
-        except RetriesExhausted:
-            pass
 
         assert failsafe.context.attempts == expected_attempts
 
@@ -82,12 +66,10 @@ class TestFailSafe(unittest.TestCase):
         failsafe = FailSafe(retry_policy=policy)
         assert failsafe.context.attempts == 0
 
-        try:
+        with pytest.raises(RetriesExhausted):
             loop.run_until_complete(
-                failsafe.run(lambda: get_coroutine(broken_url))
+                failsafe.run(failing_operation)
             )
-        except RetriesExhausted:
-            pass
 
         assert failsafe.context.attempts == retries + 1
 
@@ -97,5 +79,5 @@ class TestFailSafe(unittest.TestCase):
             circuit_breaker = CircuitBreaker(maximum_failures=2)
             loop.run_until_complete(
                 FailSafe(retry_policy=policy)
-                .run(lambda: get_coroutine(broken_url), circuit_breaker)
+                .run(failing_operation, circuit_breaker)
             )
