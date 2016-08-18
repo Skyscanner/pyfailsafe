@@ -2,6 +2,25 @@ from failsafe.circuit_breaker import AlwaysClosedCircuitBreaker
 from failsafe.retry_policy import RetryPolicy
 
 
+class FailsafeError(Exception):
+    pass
+
+
+class CircuitOpen(FailsafeError):
+    pass
+
+
+class RetriesExhausted(FailsafeError):
+    pass
+
+
+class Context(object):
+
+    def __init__(self):
+        self.attempts = 0
+        self.errors = 0
+
+
 class Failsafe:
 
     def __init__(self, retry_policy=None, circuit_breaker=None):
@@ -28,18 +47,3 @@ class Failsafe:
                 self.circuit_breaker.record_failure()
 
         raise RetriesExhausted()
-
-
-class CircuitOpen(Exception):
-    pass
-
-
-class Context(object):
-
-    def __init__(self):
-        self.attempts = 0
-        self.errors = 0
-
-
-class RetriesExhausted(Exception):
-    pass
