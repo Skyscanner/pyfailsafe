@@ -91,7 +91,9 @@ class TestFailSafe(unittest.TestCase):
 
     def test_fallback(self):
         policy = RetryPolicy(1, SomeRetriableException)
-        fallback = lambda: get_coroutine('http://httpbin.org/get')
+
+        def fallback(): return get_coroutine('http://httpbin.org/get')
+
         loop.run_until_complete(
             FailSafe(retry_policy=policy).with_fallback(fallback).run(lambda: get_coroutine(broken_url))
         )
@@ -102,7 +104,7 @@ class TestFailSafe(unittest.TestCase):
             circuit_breaker = CircuitBreaker()
             loop.run_until_complete(
                 FailSafe(retry_policy=policy)
-                    .run(lambda: get_coroutine(broken_url), circuit_breaker)
+                .run(lambda: get_coroutine(broken_url), circuit_breaker)
             )
         except CircuitOpen:
             pass
@@ -113,11 +115,13 @@ class TestFailSafe(unittest.TestCase):
         try:
             policy = RetryPolicy(5, SomeRetriableException)
             fallback_circuit_breaker = CircuitBreaker()
-            fallback = lambda: get_coroutine(broken_url)
+
+            def fallback(): return get_coroutine(broken_url)
+
             loop.run_until_complete(
                 FailSafe(retry_policy=policy)
-                    .with_fallback(fallback, fallback_circuit_breaker)
-                    .run(lambda: get_coroutine(broken_url))
+                .with_fallback(fallback, fallback_circuit_breaker)
+                .run(lambda: get_coroutine(broken_url))
             )
         except CircuitOpen:
             pass
@@ -130,12 +134,14 @@ class TestFailSafe(unittest.TestCase):
         threshold = 4
         circuit_breaker = CircuitBreaker(threshold=threshold)
         fallback_circuit_breaker = CircuitBreaker()
-        fallback = lambda: get_coroutine(broken_url)
+
+        def fallback(): return get_coroutine(broken_url)
+
         try:
             loop.run_until_complete(
                 FailSafe(retry_policy=policy)
-                    .with_fallback(fallback, fallback_circuit_breaker)
-                    .run(lambda: get_coroutine(broken_url), circuit_breaker)
+                .with_fallback(fallback, fallback_circuit_breaker)
+                .run(lambda: get_coroutine(broken_url), circuit_breaker)
             )
         except CircuitOpen:
             pass
