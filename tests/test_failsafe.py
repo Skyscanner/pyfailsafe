@@ -1,5 +1,6 @@
 import asyncio
 import aiohttp
+import unittest
 
 from failsafe import RetryPolicy, FailSafe, CircuitOpen, CircuitBreaker, NoMoreFallbacks
 
@@ -23,7 +24,7 @@ url = 'http://httpbin.org/get'
 broken_url = 'http://httpbin.org/getbrooooken'
 
 
-class TestFailSafe:
+class TestFailSafe(unittest.TestCase):
 
     def test_no_retry(self):
         try:
