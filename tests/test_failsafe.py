@@ -80,7 +80,7 @@ class TestFailSafe(unittest.TestCase):
     def test_retry_on_custom_exception(self):
         failing_operation = create_failing_operation()
         retries = 3
-        policy = RetryPolicy(retries, SomeRetriableException)
+        policy = RetryPolicy(retries, [SomeRetriableException])
         failsafe = Failsafe(retry_policy=policy)
 
         assert failing_operation.called == 0
@@ -96,7 +96,7 @@ class TestFailSafe(unittest.TestCase):
         failing_operation = create_failing_operation()
 
         with pytest.raises(CircuitOpen):
-            policy = RetryPolicy(5, SomeRetriableException)
+            policy = RetryPolicy(5, [SomeRetriableException])
             circuit_breaker = CircuitBreaker(maximum_failures=2)
             loop.run_until_complete(
                 Failsafe(retry_policy=policy, circuit_breaker=circuit_breaker)
