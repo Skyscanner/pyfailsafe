@@ -12,7 +12,7 @@ class RetryPolicy:
         return context.attempts <= self.retries and is_expected_exception
 
 
-class TryAgain:
+class FailSafe:
 
     def __init__(self):
         self.context = Context()

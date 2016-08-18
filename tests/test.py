@@ -1,7 +1,7 @@
 import asyncio
 import aiohttp
 
-from pyfailsafe import RetryPolicy, TryAgain, CircuitOpen, CircuitBreaker, NoMoreFallbacks
+from failsafe import RetryPolicy, FailSafe, CircuitOpen, CircuitBreaker, NoMoreFallbacks
 
 
 class SomeRetriableException(Exception):
@@ -23,12 +23,12 @@ url = 'http://httpbin.org/get'
 broken_url = 'http://httpbin.org/getbrooooken'
 
 
-class TestTryAgain:
+class TestFailSafe:
 
     def test_no_retry(self):
         try:
             loop.run_until_complete(
-                TryAgain().run(lambda: get_events(url))
+                FailSafe().run(lambda: get_events(url))
             )
         except NoMoreFallbacks:
             pass
@@ -37,7 +37,7 @@ class TestTryAgain:
         try:
             policy = RetryPolicy()
             loop.run_until_complete(
-                TryAgain().with_retry_policy(policy).run(lambda: get_events(url))
+                FailSafe().with_retry_policy(policy).run(lambda: get_events(url))
             )
         except NoMoreFallbacks:
             pass
@@ -46,7 +46,7 @@ class TestTryAgain:
         expected_attempts = 2
         retries = 1
         policy = RetryPolicy(retries)
-        tryagain = TryAgain()
+        tryagain = FailSafe()
         assert tryagain.context.attempts == 0
         try:
             loop.run_until_complete(
@@ -61,7 +61,7 @@ class TestTryAgain:
         expected_attempts = 5
         retries = 4
         policy = RetryPolicy(retries)
-        tryagain = TryAgain()
+        tryagain = FailSafe()
         assert tryagain.context.attempts == 0
 
         try:
@@ -76,7 +76,7 @@ class TestTryAgain:
     def test_retry_on_custom_exception(self):
         retries = 3
         policy = RetryPolicy(retries, SomeRetriableException)
-        tryagain = TryAgain()
+        tryagain = FailSafe()
         assert tryagain.context.attempts == 0
 
         try:
@@ -92,7 +92,7 @@ class TestTryAgain:
         policy = RetryPolicy(1, SomeRetriableException)
         fallback = lambda: get_events('http://httpbin.org/get')
         loop.run_until_complete(
-            TryAgain().with_retry_policy(policy).with_fallback(fallback).run(lambda: get_events(broken_url))
+            FailSafe().with_retry_policy(policy).with_fallback(fallback).run(lambda: get_events(broken_url))
         )
 
     def test_circuit_breaker(self):
@@ -100,7 +100,7 @@ class TestTryAgain:
             policy = RetryPolicy(5, SomeRetriableException)
             circuit_breaker = CircuitBreaker()
             loop.run_until_complete(
-                TryAgain()
+                FailSafe()
                     .with_retry_policy(policy)
                     .run(lambda: get_events('http://httpbin.org/getbrooooken'), circuit_breaker)
             )
@@ -115,7 +115,7 @@ class TestTryAgain:
             fallback_circuit_breaker = CircuitBreaker()
             fallback = lambda: get_events(broken_url)
             loop.run_until_complete(
-                TryAgain()
+                FailSafe()
                     .with_fallback(fallback, fallback_circuit_breaker)
                     .with_retry_policy(policy)
                     .run(lambda: get_events(broken_url))
@@ -134,7 +134,7 @@ class TestTryAgain:
         fallback = lambda: get_events(broken_url)
         try:
             loop.run_until_complete(
-                TryAgain()
+                FailSafe()
                     .with_fallback(fallback, fallback_circuit_breaker)
                     .with_retry_policy(policy)
                     .run(lambda: get_events(broken_url), circuit_breaker)
