@@ -13,6 +13,7 @@ class SomeRetriableException(Exception):
 async def successful_operation():
     return 1
 
+
 async def failing_operation():
     raise SomeRetriableException()
 
@@ -21,7 +22,6 @@ loop = asyncio.get_event_loop()
 
 
 class TestFailSafe(unittest.TestCase):
-
     def test_no_retry(self):
         loop.run_until_complete(
             Failsafe().run(successful_operation)
@@ -78,6 +78,6 @@ class TestFailSafe(unittest.TestCase):
             policy = RetryPolicy(5, SomeRetriableException)
             circuit_breaker = CircuitBreaker(maximum_failures=2)
             loop.run_until_complete(
-                Failsafe(retry_policy=policy)
-                .run(failing_operation, circuit_breaker)
+                Failsafe(retry_policy=policy, circuit_breaker=circuit_breaker)
+                .run(failing_operation)
             )

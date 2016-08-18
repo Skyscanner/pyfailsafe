@@ -9,8 +9,8 @@ class Failsafe:
         self.retry_policy = retry_policy or RetryPolicy(0)
         self.circuit_breaker = circuit_breaker or AlwaysClosedCircuitBreaker()
 
-    async def run(self, callable, circuit_breaker=None):
-        callables = [(callable, circuit_breaker)]
+    async def run(self, callable):
+        callables = [(callable, self.circuit_breaker)]
         while callables:
             callable, circuit_breaker = callables.pop(0)
             retry = True
@@ -26,8 +26,7 @@ class Failsafe:
 
                 try:
                     self.context.attempts += 1
-                    coroutine = callable()
-                    result = await coroutine
+                    result = await callable()
                     if circuit_breaker:
                         circuit_breaker.record_success()
                     return result
