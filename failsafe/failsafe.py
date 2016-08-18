@@ -2,7 +2,7 @@ from failsafe.circuit_breaker import AlwaysClosedCircuitBreaker
 from failsafe.retry_policy import RetryPolicy
 
 
-class FailSafe:
+class Failsafe:
 
     def __init__(self, retry_policy=None, circuit_breaker=None):
         self.context = Context()
