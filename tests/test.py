@@ -8,7 +8,7 @@ class SomeRetriableException(Exception):
     pass
 
 
-async def get_events(url):
+async def get_coroutine(url):
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
             # print(resp.status)
@@ -28,7 +28,7 @@ class TestFailSafe:
     def test_no_retry(self):
         try:
             loop.run_until_complete(
-                FailSafe().run(lambda: get_events(url))
+                FailSafe().run(lambda: get_coroutine(url))
             )
         except NoMoreFallbacks:
             pass
@@ -37,7 +37,7 @@ class TestFailSafe:
         try:
             policy = RetryPolicy()
             loop.run_until_complete(
-                FailSafe(retry_policy=policy).run(lambda: get_events(url))
+                FailSafe(retry_policy=policy).run(lambda: get_coroutine(url))
             )
         except NoMoreFallbacks:
             pass
@@ -50,7 +50,7 @@ class TestFailSafe:
         assert failsafe.context.attempts == 0
         try:
             loop.run_until_complete(
-                failsafe.run(lambda: get_events(broken_url))
+                failsafe.run(lambda: get_coroutine(broken_url))
             )
         except NoMoreFallbacks:
             pass
@@ -66,7 +66,7 @@ class TestFailSafe:
 
         try:
             loop.run_until_complete(
-                failsafe.run(lambda: get_events(broken_url))
+                failsafe.run(lambda: get_coroutine(broken_url))
             )
         except NoMoreFallbacks:
             pass
@@ -81,7 +81,7 @@ class TestFailSafe:
 
         try:
             loop.run_until_complete(
-                failsafe.run(lambda: get_events(broken_url))
+                failsafe.run(lambda: get_coroutine(broken_url))
             )
         except NoMoreFallbacks:
             pass
@@ -90,9 +90,9 @@ class TestFailSafe:
 
     def test_fallback(self):
         policy = RetryPolicy(1, SomeRetriableException)
-        fallback = lambda: get_events('http://httpbin.org/get')
+        fallback = lambda: get_coroutine('http://httpbin.org/get')
         loop.run_until_complete(
-            FailSafe(retry_policy=policy).with_fallback(fallback).run(lambda: get_events(broken_url))
+            FailSafe(retry_policy=policy).with_fallback(fallback).run(lambda: get_coroutine(broken_url))
         )
 
     def test_circuit_breaker(self):
@@ -101,7 +101,7 @@ class TestFailSafe:
             circuit_breaker = CircuitBreaker()
             loop.run_until_complete(
                 FailSafe(retry_policy=policy)
-                    .run(lambda: get_events('http://httpbin.org/getbrooooken'), circuit_breaker)
+                    .run(lambda: get_coroutine(broken_url), circuit_breaker)
             )
         except CircuitOpen:
             pass
@@ -112,11 +112,11 @@ class TestFailSafe:
         try:
             policy = RetryPolicy(5, SomeRetriableException)
             fallback_circuit_breaker = CircuitBreaker()
-            fallback = lambda: get_events(broken_url)
+            fallback = lambda: get_coroutine(broken_url)
             loop.run_until_complete(
                 FailSafe(retry_policy=policy)
                     .with_fallback(fallback, fallback_circuit_breaker)
-                    .run(lambda: get_events(broken_url))
+                    .run(lambda: get_coroutine(broken_url))
             )
         except CircuitOpen:
             pass
@@ -129,12 +129,12 @@ class TestFailSafe:
         threshold = 4
         circuit_breaker = CircuitBreaker(threshold=threshold)
         fallback_circuit_breaker = CircuitBreaker()
-        fallback = lambda: get_events(broken_url)
+        fallback = lambda: get_coroutine(broken_url)
         try:
             loop.run_until_complete(
                 FailSafe(retry_policy=policy)
                     .with_fallback(fallback, fallback_circuit_breaker)
-                    .run(lambda: get_events(broken_url), circuit_breaker)
+                    .run(lambda: get_coroutine(broken_url), circuit_breaker)
             )
         except CircuitOpen:
             pass
