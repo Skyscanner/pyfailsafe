@@ -1,17 +1,5 @@
-import datetime
-
 from failsafe.circuit_breaker import AlwaysClosedCircuitBreaker
-
-
-class RetryPolicy:
-
-    def __init__(self, retries=0, exception=None):
-        self.retries = retries
-        self.exception = exception
-
-    def should_retry(self, context, exception=None):
-        is_expected_exception = isinstance(exception, self.exception) if self.exception else True
-        return context.attempts <= self.retries and is_expected_exception
+from failsafe.retry_policy import RetryPolicy
 
 
 class FailSafe:
@@ -29,7 +17,7 @@ class FailSafe:
             self.context = Context()
 
             while retry:
-                if circuit_breaker and not circuit_breaker.allows_requests():
+                if circuit_breaker and not circuit_breaker.allows_execution():
                     if callables:
                         retry = False
                         continue
@@ -55,28 +43,6 @@ class FailSafe:
 
 class CircuitOpen(Exception):
     pass
-
-
-class CircuitBreaker:
-
-    def __init__(self, threshold=0):
-        self.successes = []
-        self.failures = []
-        self.threshold = threshold
-
-    def allows_requests(self):
-        if not self.failures:
-            return True
-
-        failures_in_last_second = [x for x in self.failures
-                                   if x >= datetime.datetime.now() - datetime.timedelta(seconds=10)]
-        return len(failures_in_last_second) <= self.threshold
-
-    def record_success(self):
-        self.successes.append(datetime.datetime.now())
-
-    def record_failure(self):
-        self.failures.append(datetime.datetime.now())
 
 
 class Context(object):

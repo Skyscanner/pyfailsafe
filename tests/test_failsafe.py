@@ -2,6 +2,8 @@ import asyncio
 import aiohttp
 import unittest
 
+import pytest
+
 from failsafe import RetryPolicy, FailSafe, CircuitOpen, CircuitBreaker, RetriesExhausted
 
 
@@ -90,14 +92,10 @@ class TestFailSafe(unittest.TestCase):
         assert failsafe.context.attempts == retries + 1
 
     def test_circuit_breaker(self):
-        try:
+        with pytest.raises(CircuitOpen):
             policy = RetryPolicy(5, SomeRetriableException)
-            circuit_breaker = CircuitBreaker()
+            circuit_breaker = CircuitBreaker(maximum_failures=2)
             loop.run_until_complete(
                 FailSafe(retry_policy=policy)
                 .run(lambda: get_coroutine(broken_url), circuit_breaker)
             )
-        except CircuitOpen:
-            pass
-
-        assert len(circuit_breaker.failures) == 1
