@@ -1,0 +1,2 @@
+# pyfailsafe
+Failsafe python implementation
