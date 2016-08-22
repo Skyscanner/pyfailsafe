@@ -26,7 +26,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     platforms="any",
-    install_requires=get_requirements("requirements.txt"),
+    install_requires=[],
     setup_requires=["pytest-runner"],
     tests_require=get_requirements("requirements_test.txt")
 )
