@@ -22,7 +22,6 @@ When making changes to the module it is always a good idea to run everything wit
     # Python3
     pyvenv venv
     source venv/bin/activate
-    pip install -r requirements.txt
     pip install -r requirements_test.txt
 
 Unit tests are written using pytest and can be run from the root of the project with
