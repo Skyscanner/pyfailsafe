@@ -1,1 +1,1 @@
-The author of this repo has not set a contributing guide yet.
+Discuss proposed contribution by opening an [issue](https://github.com/Skyscanner/pyfailsafe/issues).
