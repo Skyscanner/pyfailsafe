@@ -42,7 +42,7 @@ class SomeRetriableException(Exception):
     pass
 
 
-class TestFailSafe(unittest.TestCase):
+class TestFailsafe(unittest.TestCase):
 
     def test_no_retry(self):
         succeeding_operation = create_succeeding_operation()
