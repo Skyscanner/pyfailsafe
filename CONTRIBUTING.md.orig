@@ -1,3 +1,6 @@
+<<<<<<< e91e850707eac40b2b7e9585adddc7e2a8ef4a6c
+Discuss proposed contribution by opening an [issue](https://github.com/Skyscanner/pyfailsafe/issues).
+=======
 # Contributing to Pyfailsafe
 
 We're glad you want to make a contribution!
@@ -27,3 +30,4 @@ If you are adding a new file it should have a header like this:
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ```
+>>>>>>> Set required contributing guide
