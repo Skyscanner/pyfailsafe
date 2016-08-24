@@ -2,7 +2,7 @@
 
 A Python library for handling failures, heavily inspired by the Java project [Failsafe](https://github.com/jhalterman/failsafe).
 
-Pyfailsafe takes advantage of the Python's coroutines and provides functions to make sure that the unreliable IO calls are handled safely. It only supports async operations and Python 3.5.
+Pyfailsafe provides mechanisms for dealing with operations that inherently can fail, such as calls to external services. It takes advantage of the Python's coroutines and only supports async operations and Python 3.5.
 
 The following features are supported:
 
@@ -56,7 +56,7 @@ await Failsafe(retry_policy=retry_policy).run(my_async_function)
 # my_async_function was called 4 times (1 regular call + 3 retries)
 ```
 
-It is possible to specify which exceptions should cause a retry and which should cause immediate failure:
+It is possible to specify a particular set of exceptions that should cause a retry - any exception not contained in that set will cause immediate failure instead.
 
 ```python
 from failsafe import Failsafe, RetryPolicy
@@ -109,22 +109,27 @@ await failsafe.run(my_async_function)
 
 A circuit breaker instance can and should be shared across code that accesses inter-dependent system components that fail together. This ensures that if the circuit is opened, executions against one component that rely on another component will not be allowed until the circuit is closed again.
 
-A circuit breaker instance is statefull - it remembers how many failures occures and whether the circuit is open or closed.
+A circuit breaker instance is stateful - it remembers how many failures occur and whether the circuit is open or closed.
 
 #### CircuitBreaker interface
 
-Circuit breaker can can be also operated using its interface:
+A CircuitBreaker can also be manually operated in a standalone way:
 
 ```python
 from failsafe import CircuitBreaker
 
 circuit_breaker = CircuitBreaker()
-circuit_breaker.allows_execution()
-circuit_breaker.report_failure()
-circuit_breaker.report_success()
+
 circuit_breaker.open()  # executions won't be allowed when circuit breaker is open
 circuit_breaker.close()
 circuit_breaker.current_state  # 'open' or 'closed' 
+
+if circuit_breaker.allows_execution():
+    try:
+        do_something()
+        circuit_breaker.report_success()
+    except:
+        circuit_breaker.report_failure()
 ```
 
 #### Circuit breaker with retries
@@ -163,13 +168,13 @@ async def make_get_request(url):
         with aiohttp.ClientSession() as session:
             async with session.get(_url) as resp:
                 if resp.status != 200:
-                    raise Exception()  # exception tells Failsafe to retry and report an error to circuit breaker
+                    raise Exception()  # exception tells Failsafe to retry
                 return await resp.json()
 
     try:
         return await failsafe.run(lambda: _make_get_request(url))
     except FailsafeError:
-        raise Exception("Error while getting data")
+        raise RuntimeError("Error while getting data")
 
 
 if __name__ == "__main__":
