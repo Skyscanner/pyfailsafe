@@ -3,8 +3,10 @@ build:
     image: python:3.5-slim
     commands:
       - pip install -r requirements_test.txt
-      - flake8 failsafe/ tests/
+      - flake8 failsafe/ tests/ examples/
       - python setup.py test
+      - pip install -r examples/requirements.txt
+      - py.test examples/test.py
 
   set_dev_version:
     image: python:3.5-slim
