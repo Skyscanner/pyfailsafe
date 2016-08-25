@@ -226,7 +226,7 @@ class PartnerSortingClient:
 
 It is recommended to wrap calls in the class which will abstract away the outside service.
 
-Check [examples/](https://github.com/Skyscanner/pyfailsafe/tree/master/example) folder for comprehensive examples of how Pyfailsafe should be used.
+Check [examples](https://github.com/Skyscanner/pyfailsafe/tree/master/examples) folder for comprehensive examples of how Pyfailsafe should be used.
 
 ## Developing
 
