@@ -193,7 +193,34 @@ if __name__ == "__main__":
 
 #### Making HTTP calls with fallbacks
 
-TODO: show how to make a call with AsyncHttpFailsafe
+Use FallbackFailsafe class to simplify handling fallbacks:
+
+```python
+import aiohttp
+from urllib.parse import urljoin
+
+from failsafe import FallbackFailsafe
+
+class PartnerSortingClient:
+    def __init__(self):
+        endpoint_main = "http://hbe-psa.eu-west-1.prod.aws.skyscanner.local"
+        endpoint_secondary = "http://hbe-psa.eu-central-1.prod.aws.skyscanner.local"
+
+        self.fallback_failsafe = FallbackFailsafe([endpoint_main, endpoint_secondary])
+
+    async def get_deal(self, partner, market, device, hotel_id):
+        query_path = "/v1/relevance/partner/{0}/market/{1}/device/{2}/hotel/{3}".format(partner, market, device, hotel_id)
+        return await self.fallback_failsafe.run(self._request, query_path)
+
+    async def _request(self, endpoint, query_path):
+        url = urljoin(endpoint, query_path)
+
+        with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                if resp.status != 200:
+                    raise Exception()
+                return await resp.json()
+```
 
 #### Wrapping Pyfailsafe
 

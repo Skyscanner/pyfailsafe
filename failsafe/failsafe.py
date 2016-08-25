@@ -10,33 +10,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import OrderedDict
-from urllib.parse import urljoin
 import logging
 
 from failsafe.circuit_breaker import AlwaysClosedCircuitBreaker
 from failsafe.retry_policy import RetryPolicy
-from failsafe.circuit_breaker import CircuitBreaker
 
 logger = logging.getLogger(__name__)
-
-
-class AsyncHttpFailsafe:
-    def __init__(self, base_urls=None, allowed_retries=4, maximum_failures=2):
-        policy = RetryPolicy(allowed_retries=allowed_retries)
-        self.failsafe_list = OrderedDict()
-        for url in base_urls:
-            circuit_breaker = CircuitBreaker(maximum_failures=maximum_failures)
-            _failsafe = Failsafe(retry_policy=policy, circuit_breaker=circuit_breaker)
-            self.failsafe_list[url] = _failsafe
-
-    async def run(self, fn, query_path, *args, **kwargs):
-        for base_url, _failsafe in self.failsafe_list.items():
-            url = urljoin(base_url, query_path)
-            try:
-                return await _failsafe.run(lambda: fn(url, *args, **kwargs))
-            except FailsafeError:
-                logging.debug("Executing fallback callable")
 
 
 class FailsafeError(Exception):
