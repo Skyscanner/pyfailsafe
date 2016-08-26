@@ -26,31 +26,31 @@ class FallbackFailsafe:
     This class provides a way of executing Failsafe calls in order to provide fallback functionality.
     """
 
-    def __init__(self, fallback_data_list, retry_policy_factory=None, circuit_breaker_factory=None):
+    def __init__(self, fallback_options, retry_policy_factory=None, circuit_breaker_factory=None):
         """
-        :param fallback_data_list: a list of objects which will differentiate between different fallback calls. An item
+        :param fallback_options: a list of objects which will differentiate between different fallback calls. An item
             from this list will be passed as the first parameter to the function provided to the run method.
-        :param retry_policy_factory: factory function taking an item from fallback_data
+        :param retry_policy_factory: factory function accepting a fallback option
             and returning a retry policy
-        :param circuit_breaker_factory: factory function taking an item from fallback_data
+        :param circuit_breaker_factory: factory function accepting a fallback option
             and returning a circuit breaker
         """
 
         retry_policy_factory = retry_policy_factory or (lambda _: RetryPolicy())
         circuit_breaker_factory = circuit_breaker_factory or (lambda _: CircuitBreaker())
 
-        def _create_failsafe(data):
-            return Failsafe(retry_policy=retry_policy_factory(data), circuit_breaker=circuit_breaker_factory(data))
+        def _create_failsafe(option):
+            return Failsafe(retry_policy=retry_policy_factory(option), circuit_breaker=circuit_breaker_factory(option))
 
-        self.failsafe_list = [(data, _create_failsafe(data))
-                              for data in fallback_data_list]
+        self.failsafes = [(option, _create_failsafe(option))
+                          for option in fallback_options]
 
     async def run(self, callable, *args, **kwargs):
-        for (fallback_data, failsafe) in self.failsafe_list:
+        for (fallback_option, failsafe) in self.failsafes:
             try:
-                return await failsafe.run(lambda: callable(fallback_data, *args, **kwargs))
+                return await failsafe.run(lambda: callable(fallback_option, *args, **kwargs))
             except FailsafeError:
-                logger.debug("Executing fallback callable")
+                logger.debug("Fallback option {} failed".format(fallback_option))
 
         logger.debug("No more fallbacks")
         raise FallbacksExhausted("No more fallbacks")
