@@ -81,8 +81,11 @@ class TestFallbackFailsafe(unittest.TestCase):
             assert args == ("arg1", "arg2")
             assert kwargs == {"key1": "value1", "key2": "value2"}
 
-        fallback_failsafe = FallbackFailsafe(["fallback option"])
+            return "return value"
 
-        loop.run_until_complete(
+        fallback_failsafe = FallbackFailsafe(["fallback option"])
+        result = loop.run_until_complete(
             fallback_failsafe.run(call, "positional argument", "arg1", "arg2", key1="value1", key2="value2")
         )
+
+        assert result == "return value"
