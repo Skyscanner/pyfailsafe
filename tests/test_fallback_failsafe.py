@@ -38,11 +38,11 @@ def create_failing_operation():
 
 class TestFallbackFailsafe(unittest.TestCase):
     def test_value_is_called(self):
-        async def call(data):
-            assert data == "fallback data 1"
+        async def call(option):
+            assert option == "fallback option 1"
             return "return value"
 
-        fallback_failsafe = FallbackFailsafe(["fallback data 1", "fallback data 2"])
+        fallback_failsafe = FallbackFailsafe(["fallback option 1", "fallback option 2"])
         result = loop.run_until_complete(
             fallback_failsafe.run(call)
         )
@@ -50,13 +50,13 @@ class TestFallbackFailsafe(unittest.TestCase):
         assert result == "return value"
 
     def test_fallback_is_called_when_exception_is_raised(self):
-        async def call(data):
-            if data == "fallback data 1":
+        async def call(option):
+            if option == "fallback option 1":
                 raise Exception()
-            elif data == "fallback data 2":
+            elif option == "fallback option 2":
                 return "return value"
 
-        fallback_failsafe = FallbackFailsafe(["fallback data 1", "fallback data 2"])
+        fallback_failsafe = FallbackFailsafe(["fallback option 1", "fallback option 2"])
         result = loop.run_until_complete(
             fallback_failsafe.run(call)
         )
@@ -67,7 +67,7 @@ class TestFallbackFailsafe(unittest.TestCase):
         async def call(_):
             raise Exception()
 
-        fallback_failsafe = FallbackFailsafe(["fallback data 1", "fallback data 2"])
+        fallback_failsafe = FallbackFailsafe(["fallback option 1", "fallback option 2"])
 
         with pytest.raises(FallbacksExhausted):
             loop.run_until_complete(
@@ -75,14 +75,17 @@ class TestFallbackFailsafe(unittest.TestCase):
             )
 
     def test_args_are_passed_to_function(self):
-        async def call(fallback_data, positional_argument, *args, **kwargs):
-            assert fallback_data == "fallback data"
+        async def call(fallback_option, positional_argument, *args, **kwargs):
+            assert fallback_option == "fallback option"
             assert positional_argument == "positional argument"
             assert args == ("arg1", "arg2")
             assert kwargs == {"key1": "value1", "key2": "value2"}
 
-        fallback_failsafe = FallbackFailsafe(["fallback data"])
+            return "return value"
 
-        loop.run_until_complete(
+        fallback_failsafe = FallbackFailsafe(["fallback option"])
+        result = loop.run_until_complete(
             fallback_failsafe.run(call, "positional argument", "arg1", "arg2", key1="value1", key2="value2")
         )
+
+        assert result == "return value"
