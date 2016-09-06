@@ -28,32 +28,34 @@ class TestCircuitBreaker:
 
     def test_open_circuit_does_not_allow_execution(self):
         circuit_breaker = CircuitBreaker(maximum_failures=1)
-        circuit_breaker.record_failure()
+        circuit_breaker.record_failure(Exception())
         assert circuit_breaker.current_state == 'open'
         assert circuit_breaker.allows_execution() is False
 
     def test_circut_stays_closed_after_less_failures_then_limit(self):
         circuit_breaker = CircuitBreaker(maximum_failures=3)
-        circuit_breaker.record_failure()
-        circuit_breaker.record_failure()
+        circuit_breaker.record_failure(Exception())
+        circuit_breaker.record_failure(Exception())
 
         assert circuit_breaker.current_state == 'closed'
 
     def test_circut_is_opened_after_failures(self):
+        test_exception = Exception("test")
         circuit_breaker = CircuitBreaker(maximum_failures=3)
-        circuit_breaker.record_failure()
-        circuit_breaker.record_failure()
-        circuit_breaker.record_failure()
+        circuit_breaker.record_failure(Exception())
+        circuit_breaker.record_failure(Exception())
+        circuit_breaker.record_failure(test_exception)
 
         assert circuit_breaker.current_state == 'open'
+        assert circuit_breaker.reason == test_exception
 
     def test_circut_success_resets_failures_counter(self):
         circuit_breaker = CircuitBreaker(maximum_failures=3)
-        circuit_breaker.record_failure()
-        circuit_breaker.record_failure()
+        circuit_breaker.record_failure(Exception())
+        circuit_breaker.record_failure(Exception())
         circuit_breaker.record_success()
-        circuit_breaker.record_failure()
-        circuit_breaker.record_failure()
+        circuit_breaker.record_failure(Exception())
+        circuit_breaker.record_failure(Exception())
 
         assert circuit_breaker.current_state == 'closed'
 
@@ -66,7 +68,7 @@ class TestCircuitBreaker:
 
         monotonic_mock.return_value = 100
 
-        circuit_breaker.record_failure()
+        circuit_breaker.record_failure(Exception())
 
         assert circuit_breaker.allows_execution() is False
         assert circuit_breaker.current_state == 'open'

@@ -39,11 +39,10 @@ class Context(object):
 
 class Failsafe:
 
-    def __init__(self, retry_policy=None, circuit_breaker=None, raise_last_exception=False):
+    def __init__(self, retry_policy=None, circuit_breaker=None):
         self.retry_policy = retry_policy or RetryPolicy(0)
         self.circuit_breaker = circuit_breaker or AlwaysClosedCircuitBreaker()
         self.recent_exception = None
-        self.raise_last_exception = raise_last_exception
 
     async def run(self, callable):
         retry = True
@@ -52,8 +51,7 @@ class Failsafe:
         while retry:
             if not self.circuit_breaker.allows_execution():
                 logger.debug("Circuit open, stopping execution")
-                raise CircuitOpen()
-
+                raise CircuitOpen() from self.circuit_breaker.reason
             try:
                 context.attempts += 1
                 result = await callable()
@@ -64,12 +62,9 @@ class Failsafe:
                 context.errors += 1
                 self.recent_exception = e
                 retry = self.retry_policy.should_retry(context, e)
-                self.circuit_breaker.record_failure()
+                self.circuit_breaker.record_failure(e)
 
                 if retry:
                     logger.debug("Retrying call")
 
-        if self.raise_last_exception:
-            raise self.recent_exception
-        else:
-            raise RetriesExhausted()
+        raise RetriesExhausted() from self.recent_exception
