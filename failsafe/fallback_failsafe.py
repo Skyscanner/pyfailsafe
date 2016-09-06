@@ -35,7 +35,7 @@ class FallbackFailsafe:
         :param circuit_breaker_factory: factory function accepting a fallback option
             and returning a circuit breaker
         """
-        self.recent_exception = None
+
 
         retry_policy_factory = retry_policy_factory or (lambda _: RetryPolicy())
         circuit_breaker_factory = circuit_breaker_factory or (lambda _: CircuitBreaker())
@@ -47,6 +47,7 @@ class FallbackFailsafe:
                           for option in fallback_options]
 
     async def run(self, callable, *args, **kwargs):
+        self.recent_exception = None
         for (fallback_option, failsafe) in self.failsafes:
             try:
                 return await failsafe.run(lambda: callable(fallback_option, *args, **kwargs))
