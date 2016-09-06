@@ -36,7 +36,6 @@ class FallbackFailsafe:
             and returning a circuit breaker
         """
 
-
         retry_policy_factory = retry_policy_factory or (lambda _: RetryPolicy())
         circuit_breaker_factory = circuit_breaker_factory or (lambda _: CircuitBreaker())
 
@@ -47,13 +46,13 @@ class FallbackFailsafe:
                           for option in fallback_options]
 
     async def run(self, callable, *args, **kwargs):
-        self.recent_exception = None
+        recent_exception = None
         for (fallback_option, failsafe) in self.failsafes:
             try:
                 return await failsafe.run(lambda: callable(fallback_option, *args, **kwargs))
             except FailsafeError as e:
-                self.recent_exception = e.__cause__
+                recent_exception = e.__cause__
                 logger.debug("Fallback option {} failed".format(fallback_option))
 
         logger.debug("No more fallbacks")
-        raise FallbacksExhausted("No more fallbacks") from self.recent_exception
+        raise FallbacksExhausted("No more fallbacks") from recent_exception

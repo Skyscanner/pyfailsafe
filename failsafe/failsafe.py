@@ -44,7 +44,7 @@ class Failsafe:
         self.circuit_breaker = circuit_breaker or AlwaysClosedCircuitBreaker()
 
     async def run(self, callable):
-        self.recent_exception = None
+        recent_exception = None
         retry = True
         context = Context()
 
@@ -60,11 +60,11 @@ class Failsafe:
 
             except Exception as e:
                 context.errors += 1
-                self.recent_exception = e
+                recent_exception = e
                 retry = self.retry_policy.should_retry(context, e)
                 self.circuit_breaker.record_failure(e)
 
                 if retry:
                     logger.debug("Retrying call")
 
-        raise RetriesExhausted() from self.recent_exception
+        raise RetriesExhausted() from recent_exception
