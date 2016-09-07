@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 ## [0.0.2]
 ### Added
-- All pyfailsafe exceptions raise have the most recent exception attached to its context
+- RetriesExhausted and FallbacksExhausted exceptions raise have the most recent exception attached as __cause__
 
 ## [0.0.1]
 ### Added
