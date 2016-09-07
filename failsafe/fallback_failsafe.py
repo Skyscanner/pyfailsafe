@@ -46,11 +46,13 @@ class FallbackFailsafe:
                           for option in fallback_options]
 
     async def run(self, callable, *args, **kwargs):
+        recent_exception = None
         for (fallback_option, failsafe) in self.failsafes:
             try:
                 return await failsafe.run(lambda: callable(fallback_option, *args, **kwargs))
-            except FailsafeError:
+            except FailsafeError as e:
+                recent_exception = e
                 logger.debug("Fallback option {} failed".format(fallback_option))
 
         logger.debug("No more fallbacks")
-        raise FallbacksExhausted("No more fallbacks")
+        raise FallbacksExhausted("No more fallbacks") from recent_exception
