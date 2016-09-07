@@ -23,7 +23,6 @@ class CircuitBreaker:
         self.reset_timeout_seconds = reset_timeout_seconds
 
         self.state = ClosedState(self)
-        self.reason = None
 
     def allows_execution(self):
         return self.state.allows_execution()
@@ -32,18 +31,16 @@ class CircuitBreaker:
         self.state.record_success()
         logger.debug("Success recorded")
 
-    def record_failure(self, exception):
-        self.state.record_failure(exception)
+    def record_failure(self):
+        self.state.record_failure()
         logger.debug("Failure recorded")
 
-    def open(self, exception):
+    def open(self):
         self.state = OpenState(self)
-        self.reason = exception
         logger.debug("Opened")
 
     def close(self):
         self.state = ClosedState(self)
-        self.reason = None
         logger.debug("Closed")
 
     @property
@@ -62,10 +59,10 @@ class ClosedState:
     def record_success(self):
         self.current_failures = 0
 
-    def record_failure(self, exception):
+    def record_failure(self):
         self.current_failures += 1
         if self.current_failures >= self.circuit_breaker.maximum_failures:
-            self.circuit_breaker.open(exception)
+            self.circuit_breaker.open()
 
     def get_name(self):
         return 'closed'
@@ -103,5 +100,5 @@ class AlwaysClosedCircuitBreaker(CircuitBreaker):
     def record_success(self):
         pass
 
-    def record_failure(self, exception):
+    def record_failure(self):
         pass

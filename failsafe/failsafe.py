@@ -51,7 +51,7 @@ class Failsafe:
         while retry:
             if not self.circuit_breaker.allows_execution():
                 logger.debug("Circuit open, stopping execution")
-                raise CircuitOpen() from self.circuit_breaker.reason
+                raise CircuitOpen()
             try:
                 context.attempts += 1
                 result = await callable()
@@ -62,7 +62,7 @@ class Failsafe:
                 context.errors += 1
                 recent_exception = e
                 retry = self.retry_policy.should_retry(context, e)
-                self.circuit_breaker.record_failure(e)
+                self.circuit_breaker.record_failure()
 
                 if retry:
                     logger.debug("Retrying call")
