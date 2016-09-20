@@ -219,11 +219,11 @@ class PartnerSortingClient:
                 return await resp.json()
 ```
 
-#### Wrapping Pyfailsafe
+#### Examples
 
 It is recommended to wrap calls in the class which will abstract away the outside service.
 
-Check [examples](https://github.com/Skyscanner/pyfailsafe/tree/master/examples) folder for comprehensive examples of how Pyfailsafe should be used.
+Check [examples](examples) folder for comprehensive examples of how Pyfailsafe should be used. See [examples/README.md](examples/README.md) to run examples.
 
 ## Developing
 
@@ -240,6 +240,14 @@ Unit tests are written using pytest and can be run from the root of the project 
 
 Coding standards are maintained using the flake8 tool which will run as part of the build process. To run locally simply use:
 
-    flake8 failsafe/ tests/
+    flake8 failsafe/ tests/ examples/
 
-Merge requests which do not have passing tests or flake8 will not be accepted.
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) file to add a contribution.
+
+Maintainers:
+
+- https://github.com/jakubka
+- https://github.com/carl0FF
+- https://github.com/cajturner
