@@ -1,25 +1,23 @@
-# pyfailsafe
+# Pyfailsafe
 
 A Python library for handling failures, heavily inspired by the Java project [Failsafe](https://github.com/jhalterman/failsafe).
 
 Pyfailsafe provides mechanisms for dealing with operations that inherently can fail, such as calls to external services. It takes advantage of the Python's coroutines and only supports async operations and Python 3.5.
 
-The following features are supported:
-
+* [Basic usage](#bare-failsafe-call)
 * [Retries](#failsafe-call-with-retries)
 * [Circuit breakers](#circuit-breakers)
 * [Chained calls - fallbacks](#making-http-calls-with-fallbacks)
+* [Using Pyfailsafe to make HTTP calls](#using-pyfailsafe-to-make-http-calls)
+* [Examples](#examples)
 
 ## Installation
 
-The **pyfailsafe** package is hosted on Skyscanner's PyPI repository on Artifactory
+To get started using Pyfailsafe, install with
 
-Take dependency on this library by adding the following lines to your requirements.txt file:
+    pip install pyfailsafe
 
-    --extra-index-url https://repository.prod.aws.skyscnr.com/artifactory/api/pypi/pypi/simple
-    pyfailsafe~=X.X.X
-
-**Make sure that you are connected to VPN when accessing Artifactory. Being on office network is not enough.**
+then read the rest of this document to learn how to use it.
 
 ## Usage
 
@@ -148,7 +146,7 @@ failsafe = Failsafe(circuit_breaker=circuit_breaker, retry_policy=retry_policy)
 await failsafe.run(my_async_function)
 ```
 
-### Using Failsafe to make HTTP calls
+### Using Pyfailsafe to make HTTP calls
 
 Failsafe is not dependent on any HTTP client library, so a function making a call has to be provided by the developer. Said function must return a coroutine.
 
@@ -222,11 +220,11 @@ class PartnerSortingClient:
                 return await resp.json()
 ```
 
-#### Wrapping Pyfailsafe
+## Examples
 
 It is recommended to wrap calls in the class which will abstract away the outside service.
 
-Check [examples](https://github.com/Skyscanner/pyfailsafe/tree/master/examples) folder for comprehensive examples of how Pyfailsafe should be used.
+Check [examples](examples) folder for comprehensive examples of how Pyfailsafe should be used. See [examples/README.md](examples/README.md) to run examples.
 
 ## Developing
 
@@ -243,6 +241,14 @@ Unit tests are written using pytest and can be run from the root of the project 
 
 Coding standards are maintained using the flake8 tool which will run as part of the build process. To run locally simply use:
 
-    flake8 failsafe/ tests/
+    flake8 failsafe/ tests/ examples/
 
-Merge requests which do not have passing tests or flake8 will not be accepted.
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) file to add a contribution.
+
+Maintainers:
+
+- https://github.com/jakubka
+- https://github.com/carl0FF
+- https://github.com/cajturner
