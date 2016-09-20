@@ -4,11 +4,12 @@ A Python library for handling failures, heavily inspired by the Java project [Fa
 
 Pyfailsafe provides mechanisms for dealing with operations that inherently can fail, such as calls to external services. It takes advantage of the Python's coroutines and only supports async operations and Python 3.5.
 
-The following features are supported:
-
+* [Basic usage](#bare-failsafe-call)
 * [Retries](#failsafe-call-with-retries)
 * [Circuit breakers](#circuit-breakers)
 * [Chained calls - fallbacks](#making-http-calls-with-fallbacks)
+* [Using Pyfailsafe to make HTTP calls](#using-pyfailsafe-to-make-http-calls)
+* [Examples](#examples)
 
 ## Installation
 
@@ -145,7 +146,7 @@ failsafe = Failsafe(circuit_breaker=circuit_breaker, retry_policy=retry_policy)
 await failsafe.run(my_async_function)
 ```
 
-### Using Failsafe to make HTTP calls
+### Using Pyfailsafe to make HTTP calls
 
 Failsafe is not dependent on any HTTP client library, so a function making a call has to be provided by the developer. Said function must return a coroutine.
 
@@ -219,7 +220,7 @@ class PartnerSortingClient:
                 return await resp.json()
 ```
 
-#### Examples
+## Examples
 
 It is recommended to wrap calls in the class which will abstract away the outside service.
 
