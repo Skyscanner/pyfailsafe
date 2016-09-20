@@ -1,4 +1,4 @@
-# pyfailsafe
+# Pyfailsafe
 
 A Python library for handling failures, heavily inspired by the Java project [Failsafe](https://github.com/jhalterman/failsafe).
 
@@ -12,14 +12,11 @@ The following features are supported:
 
 ## Installation
 
-The **pyfailsafe** package is hosted on Skyscanner's PyPI repository on Artifactory
+To get started using Pyfailsafe, install with
 
-Take dependency on this library by adding the following lines to your requirements.txt file:
+    pip install pyfailsafe
 
-    --extra-index-url https://repository.prod.aws.skyscnr.com/artifactory/api/pypi/pypi/simple
-    pyfailsafe~=X.X.X
-
-**Make sure that you are connected to VPN when accessing Artifactory. Being on office network is not enough.**
+then read the rest of this document to learn how to use it.
 
 ## Usage
 
