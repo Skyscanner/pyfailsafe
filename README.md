@@ -244,6 +244,12 @@ Coding standards are maintained using the flake8 tool which will run as part of 
 
     flake8 failsafe/ tests/ examples/
 
+## Publishing
+
+1. Set new version number in `failsafe/init.py` and commit it
+2. `git tag X.Y.Z`
+3. `git push --tags`
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) file to add a contribution.
