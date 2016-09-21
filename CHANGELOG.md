@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.1.1]
+### Changed
+- Pyfailsafe published to PyPI
+
 ## [0.1.0]
 ### Changed
 - Project made public
