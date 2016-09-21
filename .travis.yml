@@ -1,14 +1,9 @@
-# Config file for automatic testing at travis-ci.org
-
 language: python
-
 python:
-    - "3.5"
-    - "nightly"
-# command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
+- '3.5'
+- nightly
 install:
-    - pip install -r requirements_test.txt
-# command to run tests, e.g. python setup.py test
+- pip install -r requirements_test.txt
 script:
-    - flake8 failsafe/ tests/ examples/
-    - py.test tests/
+- flake8 failsafe/ tests/ examples/
+- py.test tests/
