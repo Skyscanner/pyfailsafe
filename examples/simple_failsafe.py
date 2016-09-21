@@ -28,8 +28,8 @@ class GitHubClient:
 
         try:
             return await self.failsafe.run(lambda: self._request(url))
-        except FailsafeError:
-            raise GitHubClientError("Could not load airports")
+        except FailsafeError as e:
+            raise GitHubClientError("Could not load repositories") from e
 
     async def _request(self, url):
         with aiohttp.ClientSession() as session:
