@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 import failsafe
 
 
@@ -8,8 +8,11 @@ setup(
     url="https://github.com/Skyscanner/pyfailsafe",
     author="Skyscanner",
     author_email="mshell@skyscanner.com",
-    description="Failsafe Python implementation",
-    packages=find_packages(),
+    description="Simple failure handling. Failsafe implementation in Python",
+    packages=[
+        "failsafe"
+    ],
+    license="Apache",
     include_package_data=True,
     platforms="any",
     install_requires=[]
