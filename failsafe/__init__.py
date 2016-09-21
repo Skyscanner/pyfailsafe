@@ -6,3 +6,5 @@ from .fallback_failsafe import FallbackFailsafe, FallbacksExhausted  # noqa
 import logging
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
+
+__version__ = '0.1.0'

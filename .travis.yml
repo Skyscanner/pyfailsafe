@@ -1,14 +1,16 @@
-# Config file for automatic testing at travis-ci.org
-
 language: python
-
 python:
-    - "3.5"
-    - "nightly"
-# command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
+- '3.5'
+- nightly
 install:
-    - pip install -r requirements_test.txt
-# command to run tests, e.g. python setup.py test
+- pip install -r requirements_test.txt
 script:
-    - flake8 failsafe/ tests/ examples/
-    - py.test tests/
+- flake8 failsafe/ tests/ examples/
+- py.test tests/
+deploy:
+  provider: pypi
+  user: jakubk
+  password:
+    secure: d47g0H/MSF2Ma9wSF+7yaPoxL71j8jVA+4p/xVfr1VCKxBwT35slv9qHuj86k+APx890l8PJpjPLsv0uhkcnnI3aoCOF4PR5IvhjKuz8188ZW6koKxRisO9LqBQEpiM9AlHGYKw20WbIvX7/lPE3kvdudtpPDvm3MDo0TLKdOUR33VC6OuKKvA07pTXXxDnCJKicXQQAQzsCaKulM2rIt7iGOrUDkB+2RbWl9LNpuPWQ4qHHnxfsuuwUlsN7SVrBHEjF1L1fqvEtaIoZ0sK4vDQu2I9g9HnkGSEjRK2mZzdInSMCthi5ZCoIpRzsFn3Bk/oDSgvOeKO5wU3tUaqiz5XgCGC83qeQnMmqqy9dQbSyso9bDXTDFxU3oe3iY0CYbt8xc5z248wIG9HgRQuWZlZZOmRr3pu2B2H1abSFAel08ZG7lVB82dikIW97Ra5rLUxY/Xm91fNENET+Tk3ohkyn89gf3AKjsC2L2FTgnfmxCKv+aMRyK4EQ2TeK+LZpZz4C3JWBCMWBIiqrDp+hlm5ogEl1aRmzFuIJl46UVGZ9DGCLe1xFIURjVnMZ3SPc1y8zSn3cd9Ql5Zgb8+harmIl7jIp6uc4rrQbRE2hjxwR5geY3n8yseoko8mXocOsUSMyTkBTf71QhEZ+H9mC5nBTr/sQcwOopM/Dnb4CL+8=
+  on:
+    tags: true

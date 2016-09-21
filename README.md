@@ -1,5 +1,6 @@
 # Pyfailsafe
 [![Build Status](https://travis-ci.org/Skyscanner/pyfailsafe.svg)](https://travis-ci.org/Skyscanner/pyfailsafe)
+[![PyPI](https://img.shields.io/pypi/v/pyfailsafe.svg)](https://pypi.python.org/pypi/pyfailsafe)
 
 A Python library for handling failures, heavily inspired by the Java project [Failsafe](https://github.com/jhalterman/failsafe).
 
@@ -243,6 +244,12 @@ Unit tests are written using pytest and can be run from the root of the project 
 Coding standards are maintained using the flake8 tool which will run as part of the build process. To run locally simply use:
 
     flake8 failsafe/ tests/ examples/
+
+## Publishing
+
+1. Set new version number in `failsafe/init.py` and commit it
+2. `git tag X.Y.Z`
+3. `git push --tags`
 
 ## Contributing
 
