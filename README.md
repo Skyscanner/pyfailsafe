@@ -1,4 +1,5 @@
 # Pyfailsafe
+[![Build Status](https://travis-ci.org/Skyscanner/pyfailsafe.svg)](https://travis-ci.org/Skyscanner/pyfailsafe)
 
 A Python library for handling failures, heavily inspired by the Java project [Failsafe](https://github.com/jhalterman/failsafe).
 
