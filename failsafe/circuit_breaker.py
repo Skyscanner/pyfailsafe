@@ -17,6 +17,13 @@ logger = logging.getLogger(__name__)
 
 
 class CircuitBreaker:
+    """
+    CircuitBreaker implements a way to temporaly disable the execution to
+    prevent an overload of the system. By default, a maximum of 2 failures is
+    allowed before considering the circuit as open for a period of 60 seconds.
+
+    The initial state of the CircuitBreaker is closed.
+    """
 
     def __init__(self, maximum_failures=2, reset_timeout_seconds=60):
         self.maximum_failures = maximum_failures
@@ -25,30 +32,53 @@ class CircuitBreaker:
         self.state = ClosedState(self)
 
     def allows_execution(self):
+        """
+        Returns a boolean indicating if the execution is allowed or not
+        depending on the state of the CircuitBreaker
+        """
         return self.state.allows_execution()
 
     def record_success(self):
+        """
+        Stores an execution success in the state of the CircuitBreaker
+        """
         self.state.record_success()
         logger.debug("Success recorded")
 
     def record_failure(self):
+        """
+        Stores an execution failure in the state of the CircuitBreaker
+        """
         self.state.record_failure()
         logger.debug("Failure recorded")
 
     def open(self):
+        """
+        Sets the state of the CircuitBreaker to open
+        """
         self.state = OpenState(self)
         logger.debug("Opened")
 
     def close(self):
+        """
+        Sets the state of the CircuitBreaker to closed
+        """
         self.state = ClosedState(self)
         logger.debug("Closed")
 
     @property
     def current_state(self):
+        """
+        Returns the current state of the CircuitBreaker
+        """
         return self.state.get_name()
 
 
 class ClosedState:
+    """
+    A status class representing the closed state of a CircuitBreaker.
+    """
+
     def __init__(self, circuit_breaker):
         self.circuit_breaker = circuit_breaker
         self.current_failures = 0
@@ -57,9 +87,17 @@ class ClosedState:
         return True
 
     def record_success(self):
+        """
+        Sets the current number of failures to 0.
+        """
         self.current_failures = 0
 
     def record_failure(self):
+        """
+        Adds a failure to the state and if the number of failures
+        has reached the allowed number of failures, changes the state
+        of the CircuitBreaker to open.
+        """
         self.current_failures += 1
         if self.current_failures >= self.circuit_breaker.maximum_failures:
             self.circuit_breaker.open()
@@ -69,11 +107,20 @@ class ClosedState:
 
 
 class OpenState:
+    """
+    A status class representing the open state of a CircuitBreaker
+    """
+
     def __init__(self, circuit_breaker):
         self.circuit_breaker = circuit_breaker
         self.opened_at = time.monotonic()
 
     def allows_execution(self):
+        """
+        Closes the CircuitBreaker if the open circuit timeout has expired.
+
+        :returns: True if the CircuitBreaker is closed again and it allows the execution.
+        """
         if time.monotonic() > self.opened_at + self.circuit_breaker.reset_timeout_seconds:
             self.circuit_breaker.close()
             return True
@@ -91,6 +138,10 @@ class OpenState:
 
 
 class AlwaysClosedCircuitBreaker(CircuitBreaker):
+    """
+    A CircuitBreaker wich is allways closed allowing all executions.
+    """
+
     def __init__(self):
         pass
 

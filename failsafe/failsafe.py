@@ -38,12 +38,26 @@ class Context(object):
 
 
 class Failsafe:
+    """
+    Failsafe is used to wrap a method call with a retry policy and/or a circuit breaker.
+    By default, the number of retries of the retry policy is 0 so no retries will be allowed
+    and the circuit breaker is always closed allowing all calls.
+    """
 
     def __init__(self, retry_policy=None, circuit_breaker=None):
         self.retry_policy = retry_policy or RetryPolicy(0)
         self.circuit_breaker = circuit_breaker or AlwaysClosedCircuitBreaker()
 
     async def run(self, callable):
+        """
+        Calls the callable method according to the retry_policy and the circuit_breaker
+        specified in the instance.
+
+        :param callable: method to call.
+        :raises: RetriesExhausted when the retry policy attempts has been reached.
+        :raises: CircuitOpen when the circuit_breaker policy has reached the
+                 maximum allowed number of failures
+        """
         recent_exception = None
         retry = True
         context = Context()
