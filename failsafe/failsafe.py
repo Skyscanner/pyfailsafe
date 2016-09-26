@@ -56,7 +56,7 @@ class Failsafe:
         :param callable: method to call.
         :raises: RetriesExhausted when the retry policy attempts has been reached.
         :raises: CircuitOpen when the circuit_breaker policy has reached the
-                 maximum allowed number of failures
+            maximum allowed number of failures
         """
         recent_exception = None
         retry = True
