@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 
 class CircuitBreaker:
     """
-    CircuitBreaker implements a way to temporaly disable the execution to
-    prevent an overload of the system. By default, a maximum of 2 failures is
+    CircuitBreaker implements a way to temporally disable the execution to
+    prevent an overload of the system. By default, a maximum of 2 failures are
     allowed before considering the circuit as open for a period of 60 seconds.
 
     The initial state of the CircuitBreaker is closed.
@@ -69,7 +69,9 @@ class CircuitBreaker:
     @property
     def current_state(self):
         """
-        Returns the current state of the CircuitBreaker
+        Get the current state of the CircuitBreaker
+
+        :returns: string `open` or `closed`
         """
         return self.state.get_name()
 
@@ -94,7 +96,7 @@ class ClosedState:
 
     def record_failure(self):
         """
-        Adds a failure to the state and if the number of failures
+        Adds a failure to the state and if the number of consecutive failures
         has reached the allowed number of failures, changes the state
         of the CircuitBreaker to open.
         """
@@ -139,7 +141,7 @@ class OpenState:
 
 class AlwaysClosedCircuitBreaker(CircuitBreaker):
     """
-    A CircuitBreaker wich is allways closed allowing all executions.
+    A CircuitBreaker wihch is allways closed allowing all executions.
     """
 
     def __init__(self):

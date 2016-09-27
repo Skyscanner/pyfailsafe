@@ -27,7 +27,8 @@ class RetryPolicy:
         account the number of attempts already performed and the retriable_exceptions.
 
         :param context: :class:`failsafe.failsafe.Context`.
-        :param exception: Exception to be considered retriable or not raised during the execution.
+        :param exception: Exception which caused failure to be considered
+            retriable or not raised during the execution.
         """
         return context.attempts <= self.allowed_retries and self._is_expected_exception(exception)
 
