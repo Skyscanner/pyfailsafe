@@ -40,14 +40,14 @@ class CircuitBreaker:
 
     def record_success(self):
         """
-        Stores an execution success in the state of the CircuitBreaker
+        Function called when the execution succeeded
         """
         self.state.record_success()
         logger.debug("Success recorded")
 
     def record_failure(self):
         """
-        Stores an execution failure in the state of the CircuitBreaker
+        Function called when the execution failed
         """
         self.state.record_failure()
         logger.debug("Failure recorded")
