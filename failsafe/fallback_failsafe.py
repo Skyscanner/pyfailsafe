@@ -46,6 +46,13 @@ class FallbackFailsafe:
                           for option in fallback_options]
 
     async def run(self, callable, *args, **kwargs):
+        """
+        Calls the callable method taking into account the fallback options specified
+        in the instance if the previous ones fail.
+
+        :param callable: method to call.
+        :raises: FallbacksExhausted when all the fallback options have failed.
+        """
         recent_exception = None
         for (fallback_option, failsafe) in self.failsafes:
             try:

@@ -91,3 +91,6 @@ ENV/
 
 # PyCharm
 .idea
+
+# Vim swap files
+*.swp

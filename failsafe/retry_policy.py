@@ -12,12 +12,24 @@
 
 
 class RetryPolicy:
+    """
+    Model to store the number of allowed retries
+    and the allowed retriable exceptions.
+    """
 
     def __init__(self, allowed_retries=3, retriable_exceptions=None):
         self.allowed_retries = allowed_retries
         self.retriable_exceptions = retriable_exceptions or []
 
     def should_retry(self, context, exception=None):
+        """
+        Returns a boolean indicating if a retry should be performed taking into
+        account the number of attempts already performed and the retriable_exceptions.
+
+        :param context: :class:`failsafe.failsafe.Context`.
+        :param exception: Exception which caused failure to be considered
+            retriable or not raised during the execution.
+        """
         return context.attempts <= self.allowed_retries and self._is_expected_exception(exception)
 
     def _is_expected_exception(self, exception):
