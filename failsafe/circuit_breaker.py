@@ -40,14 +40,22 @@ class CircuitBreaker:
 
     def record_success(self):
         """
-        Function called when the execution succeeded
+        Records an execution success.
+
+        Should be called when the operation protected by circuit breaker succeeded.
+        This will reset counter of consecutive failures. Does nothing if circuit breaker is open.
         """
         self.state.record_success()
         logger.debug("Success recorded")
 
     def record_failure(self):
         """
-        Function called when the execution failed
+        Records an execution failure.
+
+        Should be called when the operation protected by circuit breaker failed.
+        If the number of consecutive failures has reached the allowed number of failures,
+        changes the state of the CircuitBreaker to open meaning that `allows_execution` will be
+        returning false for the configured timeout. Does nothing if circuit breaker is already open.
         """
         self.state.record_failure()
         logger.debug("Failure recorded")
@@ -89,17 +97,9 @@ class ClosedState:
         return True
 
     def record_success(self):
-        """
-        Sets the current number of failures to 0.
-        """
         self.current_failures = 0
 
     def record_failure(self):
-        """
-        Adds a failure to the state and if the number of consecutive failures
-        has reached the allowed number of failures, changes the state
-        of the CircuitBreaker to open.
-        """
         self.current_failures += 1
         if self.current_failures >= self.circuit_breaker.maximum_failures:
             self.circuit_breaker.open()
@@ -118,11 +118,6 @@ class OpenState:
         self.opened_at = time.monotonic()
 
     def allows_execution(self):
-        """
-        Closes the CircuitBreaker if the open circuit timeout has expired.
-
-        :returns: True if the CircuitBreaker is closed again and it allows the execution.
-        """
         if time.monotonic() > self.opened_at + self.circuit_breaker.reset_timeout_seconds:
             self.circuit_breaker.close()
             return True
