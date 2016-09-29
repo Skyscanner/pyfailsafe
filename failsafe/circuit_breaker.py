@@ -29,7 +29,7 @@ class CircuitBreaker:
         self.maximum_failures = maximum_failures
         self.reset_timeout_seconds = reset_timeout_seconds
 
-        self.state = ClosedState(self)
+        self.state = _ClosedState(self)
 
     def allows_execution(self):
         """
@@ -64,14 +64,14 @@ class CircuitBreaker:
         """
         Sets the state of the CircuitBreaker to open
         """
-        self.state = OpenState(self)
+        self.state = _OpenState(self)
         logger.debug("Opened")
 
     def close(self):
         """
         Sets the state of the CircuitBreaker to closed
         """
-        self.state = ClosedState(self)
+        self.state = _ClosedState(self)
         logger.debug("Closed")
 
     @property
@@ -84,7 +84,7 @@ class CircuitBreaker:
         return self.state.get_name()
 
 
-class ClosedState:
+class _ClosedState:
     """
     A status class representing the closed state of a CircuitBreaker.
     """
@@ -108,7 +108,7 @@ class ClosedState:
         return 'closed'
 
 
-class OpenState:
+class _OpenState:
     """
     A status class representing the open state of a CircuitBreaker
     """
