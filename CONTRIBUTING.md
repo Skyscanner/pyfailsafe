@@ -6,6 +6,10 @@ Start by discussing the proposed contribution by opening an [issue](https://gith
 
 Take note of the build status of your pull request, only builds that pass will be accepted. Please also keep to our conventions and style so we can keep this repository as clean as possible.
 
+### Versioning
+
+Before submitting the pull request, update the version located in `failsafe/__init__.py` and add the new changes in the `CHANGELOG.md`
+
 ## License
 
 By contributing your code, you agree to license your contribution under the terms of the APLv2: https://www.apache.org/licenses/LICENSE-2.0
