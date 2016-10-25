@@ -27,7 +27,7 @@ class FallbackFailsafe:
     """
 
     def __init__(self, fallback_options, retry_policy_factory=None,
-                 circuit_breaker_factory=None, raise_policy_factory:None):
+                 circuit_breaker_factory=None, raise_policy_factory=None):
         """
         :param fallback_options: a list of objects which will differentiate between different fallback calls. An item
             from this list will be passed as the first parameter to the function provided to the run method.
