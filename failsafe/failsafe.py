@@ -14,6 +14,7 @@ import logging
 
 from failsafe.circuit_breaker import AlwaysClosedCircuitBreaker
 from failsafe.retry_policy import RetryPolicy
+from failsafe.raise_policy import RaisePolicy
 
 logger = logging.getLogger(__name__)
 
@@ -44,9 +45,10 @@ class Failsafe:
     and the circuit breaker is always closed allowing all calls.
     """
 
-    def __init__(self, retry_policy=None, circuit_breaker=None):
+    def __init__(self, retry_policy=None, circuit_breaker=None, raise_policy=None):
         self.retry_policy = retry_policy or RetryPolicy(0)
         self.circuit_breaker = circuit_breaker or AlwaysClosedCircuitBreaker()
+        self.raise_policy = raise_policy or RaisePolicy([])
 
     async def run(self, callable):
         """
@@ -76,6 +78,8 @@ class Failsafe:
                 context.errors += 1
                 recent_exception = e
                 retry = self.retry_policy.should_retry(context, e)
+                if self.raise_policy.should_raise(e):
+                    raise
                 self.circuit_breaker.record_failure()
 
                 if retry:
