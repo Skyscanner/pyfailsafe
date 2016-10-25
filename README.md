@@ -39,19 +39,19 @@ assert result == 'done'
 
 ### Failsafe call with retries
 
-Use RetryPolicy class to define the number of retries which should be made before operation fails.
+Use ExceptionHandlingPolicy class to define the number of retries which should be made before operation fails.
 
 Retries are executed immediately - there is no backoff. Waiting before executing a retry is something we plan to implement.
 
 ```python
-from failsafe import Failsafe, RetryPolicy
+from failsafe import Failsafe, ExceptionHandlingPolicy
 
 async def my_async_function():
     raise Exception()  # by default, every exception will cause a retry
 
-retry_policy = RetryPolicy(allowed_retries=3)
+retry_policy = ExceptionHandlingPolicy(allowed_retries=3)
 
-await Failsafe(retry_policy=retry_policy).run(my_async_function)
+await Failsafe(exception_handling_policy=retry_policy).run(my_async_function)
 # raises failsafe.RetriesExhausted
 # my_async_function was called 4 times (1 regular call + 3 retries)
 ```
@@ -59,27 +59,27 @@ await Failsafe(retry_policy=retry_policy).run(my_async_function)
 It is possible to specify a particular set of exceptions that should cause a retry - any exception not contained in that set will cause immediate failure instead.
 
 ```python
-from failsafe import Failsafe, RetryPolicy
+from failsafe import Failsafe, ExceptionHandlingPolicy
 
 async def my_async_function():
     return 3/0
 
-retry_policy = RetryPolicy(allowed_retries=3, retriable_exceptions=[ZeroDivisionError])
+retry_policy = ExceptionHandlingPolicy(allowed_retries=3, retriable_exceptions=[ZeroDivisionError])
 
-await Failsafe(retry_policy=retry_policy).run(my_async_function)
+await Failsafe(exception_handling_policy=retry_policy).run(my_async_function)
 # raises failsafe.RetriesExhausted
 # my_async_function was called 4 times (1 regular call + 3 retries)
 ```
 
 ```python
-from failsafe import Failsafe, RetryPolicy
+from failsafe import Failsafe, ExceptionHandlingPolicy
 
 async def my_async_function():
     raise TypeError()
 
-retry_policy = RetryPolicy(allowed_retries=3, retriable_exceptions=[ZeroDivisionError])
+retry_policy = ExceptionHandlingPolicy(allowed_retries=3, retriable_exceptions=[ZeroDivisionError])
 
-await Failsafe(retry_policy=retry_policy).run(my_async_function)
+await Failsafe(exception_handling_policy=retry_policy).run(my_async_function)
 # TypeError is not ZeroDivisionError, so my_async_function was called just once in this example
 ```
 
@@ -137,14 +137,14 @@ if circuit_breaker.allows_execution():
 It is recommended to use circuit breakers together with retry policies. Every failed retry will count as a failure to the circuit breaker.
 
 ```python
-from failsafe import Failsafe, CircuitBreaker, RetryPolicy
+from failsafe import Failsafe, CircuitBreaker, ExceptionHandlingPolicy
 
 async def my_async_function():
     raise Exception()
 
 circuit_breaker = CircuitBreaker()
-retry_policy = RetryPolicy()
-failsafe = Failsafe(circuit_breaker=circuit_breaker, retry_policy=retry_policy)
+retry_policy = ExceptionHandlingPolicy()
+failsafe = Failsafe(circuit_breaker=circuit_breaker, exception_handling_policy=retry_policy)
 await failsafe.run(my_async_function)
 ```
 
@@ -155,12 +155,12 @@ Failsafe is not dependent on any HTTP client library, so a function making a cal
 The example below uses aiohttp client to make a call.
 
 ```python
-from failsafe import Failsafe, RetryPolicy, CircuitBreaker, FailsafeError
+from failsafe import Failsafe, ExceptionHandlingPolicy, CircuitBreaker, FailsafeError
 import aiohttp
 
 circuit_breaker = CircuitBreaker()
-retry_policy = RetryPolicy()
-failsafe = Failsafe(circuit_breaker=circuit_breaker, retry_policy=retry_policy)
+retry_policy = ExceptionHandlingPolicy()
+failsafe = Failsafe(circuit_breaker=circuit_breaker, exception_handling_policy=retry_policy)
 
 
 async def make_get_request(url):
