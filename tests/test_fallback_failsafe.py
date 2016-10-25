@@ -15,6 +15,7 @@ import unittest
 import pytest
 
 from failsafe import FallbackFailsafe, FallbacksExhausted
+from failsafe import RaisePolicy
 
 loop = asyncio.get_event_loop()
 
@@ -89,3 +90,17 @@ class TestFallbackFailsafe(unittest.TestCase):
         )
 
         assert result == "return value"
+
+    def test_inner_exception_is_raised(self):
+        async def call(fallback_option, positional_argument, *args, **kwargs):
+            raise ValueError("dummy exception")
+
+        fallback_failsafe = FallbackFailsafe(["fallback option"],
+                                             raise_policy_factory=lambda _: RaisePolicy(
+                                                 [ValueError]
+                                             ))
+        self.assertRaisesRegex(
+            ValueError,
+            "dummy exception", loop.run_until_complete,
+            fallback_failsafe.run(call, "positional argument", "arg1", "arg2", key1="value1", key2="value2")
+        )
