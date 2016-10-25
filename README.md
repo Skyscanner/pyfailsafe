@@ -83,7 +83,25 @@ await Failsafe(exception_handling_policy=retry_policy).run(my_async_function)
 # TypeError is not ZeroDivisionError, so my_async_function was called just once in this example
 ```
 
-RetryPolicy instances are stateless. They can be safely shared between Failsafe instances.
+ExceptionHandlingPolicy instances are stateless. They can be safely shared between Failsafe instances.
+
+### Failsafe call with raisable exceptions
+
+If you need your code to be able to raise certain exceptions that should not be handled by the failsafe, 
+you can add them as raisable_exceptions in ExceptionHandlingPolicy
+
+```python
+from failsafe import Failsafe, ExceptionHandlingPolicy
+
+async def my_async_function():
+    raise ValueError()  # by default, every exception will cause a retry
+
+exception_policy = ExceptionHandlingPolicy(raisable_exceptions=[ValueError])
+
+await Failsafe(exception_handling_policy=exception_policy).run(my_async_function)
+# raises ValueError
+# my_async_function was called 1 time (1 regular call)
+```
 
 ### Circuit breakers
 
