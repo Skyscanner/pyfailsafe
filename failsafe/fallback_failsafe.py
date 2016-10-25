@@ -12,7 +12,7 @@
 
 import logging
 
-from failsafe import Failsafe, FailsafeError, CircuitBreaker, RetryPolicy
+from failsafe import Failsafe, FailsafeError, CircuitBreaker, RetryPolicy, RaisePolicy
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,8 @@ class FallbackFailsafe:
     This class provides a way of executing Failsafe calls in order to provide fallback functionality.
     """
 
-    def __init__(self, fallback_options, retry_policy_factory=None, circuit_breaker_factory=None):
+    def __init__(self, fallback_options, retry_policy_factory=None,
+                 circuit_breaker_factory=None, raise_policy_factory:None):
         """
         :param fallback_options: a list of objects which will differentiate between different fallback calls. An item
             from this list will be passed as the first parameter to the function provided to the run method.
@@ -38,9 +39,12 @@ class FallbackFailsafe:
 
         retry_policy_factory = retry_policy_factory or (lambda _: RetryPolicy())
         circuit_breaker_factory = circuit_breaker_factory or (lambda _: CircuitBreaker())
+        raise_policy_factory = raise_policy_factory or (lambda _: RaisePolicy())
 
         def _create_failsafe(option):
-            return Failsafe(retry_policy=retry_policy_factory(option), circuit_breaker=circuit_breaker_factory(option))
+            return Failsafe(retry_policy=retry_policy_factory(option),
+                            circuit_breaker=circuit_breaker_factory(option),
+                            raise_policy=raise_policy_factory(option))
 
         self.failsafes = [(option, _create_failsafe(option))
                           for option in fallback_options]
