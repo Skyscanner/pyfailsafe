@@ -1,10 +1,11 @@
 from .failsafe import Failsafe, FailsafeError, CircuitOpen, RetriesExhausted  # noqa
 from .circuit_breaker import CircuitBreaker  # noqa
 from .retry_policy import RetryPolicy  # noqa
+from .raise_policy import RaisePolicy  # noqa
 from .fallback_failsafe import FallbackFailsafe, FallbacksExhausted  # noqa
 
 import logging
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-__version__ = '0.1.3'
+__version__ = '0.1.4'
