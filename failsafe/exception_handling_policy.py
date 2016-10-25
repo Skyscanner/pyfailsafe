@@ -40,7 +40,6 @@ class ExceptionHandlingPolicy:
     def _is_expected_exception(self, exception):
         return any(isinstance(exception, e) for e in self.retriable_exceptions) if self.retriable_exceptions else True
 
-
     def should_raise(self, exception=None):
         """
         Returns a boolean indicating if we should raise and propagate the given exception
