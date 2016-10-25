@@ -11,15 +11,20 @@
 # limitations under the License.
 
 
-class RetryPolicy:
+class ExceptionHandlingPolicy:
     """
-    Model to store the number of allowed retries
-    and the allowed retriable exceptions.
+    Model to store the number of allowed retries, the allowed retriable exceptions
+    and the exceptions that should be re-raised
     """
 
-    def __init__(self, allowed_retries=3, retriable_exceptions=None):
+    def __init__(self, allowed_retries=3, retriable_exceptions=None, raisable_exceptions=None):
         self.allowed_retries = allowed_retries
-        self.retriable_exceptions = retriable_exceptions or []
+        if retriable_exceptions is None:
+            retriable_exceptions = []
+        self.retriable_exceptions = retriable_exceptions
+        if raisable_exceptions is None:
+            raisable_exceptions = []
+        self.raisable_exceptions = raisable_exceptions
 
     def should_retry(self, context, exception=None):
         """
@@ -34,3 +39,15 @@ class RetryPolicy:
 
     def _is_expected_exception(self, exception):
         return any(isinstance(exception, e) for e in self.retriable_exceptions) if self.retriable_exceptions else True
+
+
+    def should_raise(self, exception=None):
+        """
+        Returns a boolean indicating if we should raise and propagate the given exception
+        outside the failsafe
+
+        :param context: :class:`failsafe.failsafe.Context`.
+        :param exception: Exception which caused failure to be considered
+            raisable or not raised during the execution.
+        """
+        return any(isinstance(exception, e) for e in self.raisable_exceptions) if self.raisable_exceptions else False

@@ -15,7 +15,7 @@ import unittest
 
 import pytest
 
-from failsafe import RetryPolicy, Failsafe, CircuitOpen, CircuitBreaker, RetriesExhausted
+from failsafe import ExceptionHandlingPolicy, Failsafe, CircuitOpen, CircuitBreaker, RetriesExhausted
 
 
 loop = asyncio.get_event_loop()
@@ -52,17 +52,17 @@ class TestFailsafe(unittest.TestCase):
 
     def test_basic_retry(self):
         succeeding_operation = create_succeeding_operation()
-        policy = RetryPolicy()
+        policy = ExceptionHandlingPolicy()
         loop.run_until_complete(
-            Failsafe(retry_policy=policy).run(succeeding_operation)
+            Failsafe(exception_handling_policy=policy).run(succeeding_operation)
         )
 
     def test_retry_once(self):
         failing_operation = create_failing_operation()
         expected_attempts = 2
         retries = 1
-        policy = RetryPolicy(retries)
-        failsafe = Failsafe(retry_policy=policy)
+        policy = ExceptionHandlingPolicy(retries)
+        failsafe = Failsafe(exception_handling_policy=policy)
 
         assert failing_operation.called == 0
 
@@ -77,8 +77,8 @@ class TestFailsafe(unittest.TestCase):
         failing_operation = create_failing_operation()
         expected_attempts = 5
         retries = 4
-        policy = RetryPolicy(retries)
-        failsafe = Failsafe(retry_policy=policy)
+        policy = ExceptionHandlingPolicy(retries)
+        failsafe = Failsafe(exception_handling_policy=policy)
 
         assert failing_operation.called == 0
 
@@ -92,8 +92,8 @@ class TestFailsafe(unittest.TestCase):
     def test_retry_on_custom_exception(self):
         failing_operation = create_failing_operation()
         retries = 3
-        policy = RetryPolicy(retries, [SomeRetriableException])
-        failsafe = Failsafe(retry_policy=policy)
+        policy = ExceptionHandlingPolicy(retries, [SomeRetriableException])
+        failsafe = Failsafe(exception_handling_policy=policy)
 
         assert failing_operation.called == 0
 
@@ -108,10 +108,10 @@ class TestFailsafe(unittest.TestCase):
         failing_operation = create_failing_operation()
 
         with pytest.raises(CircuitOpen):
-            policy = RetryPolicy(5, [SomeRetriableException])
+            policy = ExceptionHandlingPolicy(5, [SomeRetriableException])
             circuit_breaker = CircuitBreaker(maximum_failures=2)
             loop.run_until_complete(
-                Failsafe(retry_policy=policy, circuit_breaker=circuit_breaker)
+                Failsafe(exception_handling_policy=policy, circuit_breaker=circuit_breaker)
                 .run(failing_operation)
             )
 
