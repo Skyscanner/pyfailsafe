@@ -11,17 +11,17 @@
 # limitations under the License.
 
 import aiohttp
-from failsafe import Failsafe, ExceptionHandlingPolicy, CircuitBreaker, FailsafeError
+from failsafe import Failsafe, RetryPolicy, CircuitBreaker, FailsafeError
 
 
 class GitHubClient:
     def __init__(self):
-        retry_policy = ExceptionHandlingPolicy(allowed_retries=4)
+        retry_policy = RetryPolicy(allowed_retries=4)
 
-        self.failsafe = Failsafe(exception_handling_policy=retry_policy,
+        self.failsafe = Failsafe(retry_policy=retry_policy,
                                  circuit_breaker=CircuitBreaker(maximum_failures=8))
 
-        self.failsafe_fallback = Failsafe(exception_handling_policy=retry_policy,
+        self.failsafe_fallback = Failsafe(retry_policy=retry_policy,
                                           circuit_breaker=CircuitBreaker(maximum_failures=8))
 
     async def get_repositories_by_user(self, github_user):

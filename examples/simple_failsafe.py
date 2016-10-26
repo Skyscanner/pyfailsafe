@@ -11,7 +11,7 @@
 # limitations under the License.
 
 import aiohttp
-from failsafe import Failsafe, ExceptionHandlingPolicy, CircuitBreaker, FailsafeError
+from failsafe import Failsafe, RetryPolicy, CircuitBreaker, FailsafeError
 
 
 class GitHubClientError(Exception):
@@ -20,7 +20,7 @@ class GitHubClientError(Exception):
 
 class GitHubClient:
     def __init__(self):
-        self.failsafe = Failsafe(exception_handling_policy=ExceptionHandlingPolicy(allowed_retries=4),
+        self.failsafe = Failsafe(retry_policy=RetryPolicy(allowed_retries=4),
                                  circuit_breaker=CircuitBreaker(maximum_failures=8))
 
     async def get_repositories_by_user(self, github_user):

@@ -15,7 +15,7 @@ import unittest
 import pytest
 
 from failsafe import FallbackFailsafe, FallbacksExhausted
-from failsafe import ExceptionHandlingPolicy
+from failsafe import RetryPolicy
 
 loop = asyncio.get_event_loop()
 
@@ -79,9 +79,9 @@ class TestFallbackFailsafe(unittest.TestCase):
             assert fallback_option == "fallback option1"
             raise ValueError()
 
-        policy = ExceptionHandlingPolicy(abortable_exceptions=[ValueError])
+        policy = RetryPolicy(abortable_exceptions=[ValueError])
         fallback_failsafe = FallbackFailsafe(["fallback option1", "fallback option2"],
-                                             exception_handling_policy_factory=lambda _: policy)
+                                             retry_policy_factory=lambda _: policy)
         with pytest.raises(ValueError):
             loop.run_until_complete(
                 fallback_failsafe.run(call))

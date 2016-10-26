@@ -11,7 +11,7 @@
 # limitations under the License.
 
 
-class ExceptionHandlingPolicy:
+class RetryPolicy:
     """
     Model to store the number of allowed retries, the allowed retriable exceptions
     and the exceptions that should abort the failsafe run

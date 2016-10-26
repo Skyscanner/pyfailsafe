@@ -1,6 +1,6 @@
 from .failsafe import Failsafe, FailsafeError, CircuitOpen, RetriesExhausted  # noqa
 from .circuit_breaker import CircuitBreaker  # noqa
-from .exception_handling_policy import ExceptionHandlingPolicy  # noqa
+from .retry_policy import RetryPolicy  # noqa
 from .fallback_failsafe import FallbackFailsafe, FallbacksExhausted  # noqa
 
 import logging

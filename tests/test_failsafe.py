@@ -16,7 +16,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from failsafe import ExceptionHandlingPolicy, Failsafe, CircuitOpen, CircuitBreaker, RetriesExhausted
+from failsafe import RetryPolicy, Failsafe, CircuitOpen, CircuitBreaker, RetriesExhausted
 
 
 loop = asyncio.get_event_loop()
@@ -66,17 +66,17 @@ class TestFailsafe(unittest.TestCase):
 
     def test_basic_retry(self):
         succeeding_operation = create_succeeding_operation()
-        policy = ExceptionHandlingPolicy()
+        policy = RetryPolicy()
         loop.run_until_complete(
-            Failsafe(exception_handling_policy=policy).run(succeeding_operation)
+            Failsafe(retry_policy=policy).run(succeeding_operation)
         )
 
     def test_retry_once(self):
         failing_operation = create_failing_operation()
         expected_attempts = 2
         retries = 1
-        policy = ExceptionHandlingPolicy(retries)
-        failsafe = Failsafe(exception_handling_policy=policy)
+        policy = RetryPolicy(retries)
+        failsafe = Failsafe(retry_policy=policy)
 
         assert failing_operation.called == 0
 
@@ -91,8 +91,8 @@ class TestFailsafe(unittest.TestCase):
         failing_operation = create_failing_operation()
         expected_attempts = 5
         retries = 4
-        policy = ExceptionHandlingPolicy(retries)
-        failsafe = Failsafe(exception_handling_policy=policy)
+        policy = RetryPolicy(retries)
+        failsafe = Failsafe(retry_policy=policy)
 
         assert failing_operation.called == 0
 
@@ -106,8 +106,8 @@ class TestFailsafe(unittest.TestCase):
     def test_retry_on_custom_exception(self):
         failing_operation = create_failing_operation()
         retries = 3
-        policy = ExceptionHandlingPolicy(retries, [SomeRetriableException])
-        failsafe = Failsafe(exception_handling_policy=policy)
+        policy = RetryPolicy(retries, [SomeRetriableException])
+        failsafe = Failsafe(retry_policy=policy)
 
         assert failing_operation.called == 0
 
@@ -122,10 +122,10 @@ class TestFailsafe(unittest.TestCase):
         failing_operation = create_failing_operation()
 
         with pytest.raises(CircuitOpen):
-            policy = ExceptionHandlingPolicy(5, [SomeRetriableException])
+            policy = RetryPolicy(5, [SomeRetriableException])
             circuit_breaker = CircuitBreaker(maximum_failures=2)
             loop.run_until_complete(
-                Failsafe(exception_handling_policy=policy, circuit_breaker=circuit_breaker)
+                Failsafe(retry_policy=policy, circuit_breaker=circuit_breaker)
                 .run(failing_operation)
             )
 
@@ -134,13 +134,13 @@ class TestFailsafe(unittest.TestCase):
     def test_circuit_breaker_with_abort(self):
         aborting_operation = create_aborting_operation()
 
-        policy = ExceptionHandlingPolicy(abortable_exceptions=[SomeAbortableException])
+        policy = RetryPolicy(abortable_exceptions=[SomeAbortableException])
         circuit_breaker = CircuitBreaker(maximum_failures=2)
 
         circuit_breaker.record_failure = MagicMock()
         with pytest.raises(SomeAbortableException):
             loop.run_until_complete(
-                Failsafe(exception_handling_policy=policy, circuit_breaker=circuit_breaker)
+                Failsafe(retry_policy=policy, circuit_breaker=circuit_breaker)
                 .run(aborting_operation)
             )
         circuit_breaker.record_failure.assert_not_called()
