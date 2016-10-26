@@ -46,9 +46,12 @@ class Failsafe:
 
     def __init__(self, retry_policy=None, circuit_breaker=None):
         if retry_policy is None:
-            retry_policy = RetryPolicy(0)
+            retry_policy = RetryPolicy(allowed_retries=0)
         self.retry_policy = retry_policy
-        self.circuit_breaker = circuit_breaker or AlwaysClosedCircuitBreaker()
+
+        if circuit_breaker is None:
+            circuit_breaker = AlwaysClosedCircuitBreaker()
+        self.circuit_breaker = circuit_breaker
 
     async def run(self, callable):
         """
