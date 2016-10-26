@@ -85,4 +85,3 @@ class TestFallbackFailsafe(unittest.TestCase):
         with pytest.raises(ValueError):
             loop.run_until_complete(
                 fallback_failsafe.run(call))
-
