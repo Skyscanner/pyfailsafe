@@ -79,6 +79,7 @@ class Failsafe:
 
             except Exception as e:
                 if self.retry_policy.should_abort(e):
+                    logger.debug("Aborting Failsafe, exception {}".format(type(e).__name__))
                     raise
                 context.errors += 1
                 recent_exception = e

@@ -61,6 +61,9 @@ class FallbackFailsafe:
             except FailsafeError as e:
                 recent_exception = e
                 logger.debug("Fallback option {} failed".format(fallback_option))
+            except Exception as e:
+                logger.debug("Aborting FallbackFailsafe, exception {}".format(type(e).__name__))
+                raise
 
         logger.debug("No more fallbacks")
         raise FallbacksExhausted("No more fallbacks") from recent_exception
