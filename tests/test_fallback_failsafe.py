@@ -74,7 +74,7 @@ class TestFallbackFailsafe(unittest.TestCase):
 
         assert result == "return value"
 
-    def test_inner_exception_is_raised(self):
+    def test_original_exception_is_raised_and_fallback_is_not_executed_on_abortion(self):
         async def call(fallback_option):
             assert fallback_option == "fallback option1"
             raise ValueError()
