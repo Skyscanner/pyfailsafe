@@ -12,6 +12,7 @@
 
 import asyncio
 import unittest
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -135,10 +136,13 @@ class TestFailsafe(unittest.TestCase):
 
         policy = ExceptionHandlingPolicy(abortable_exceptions=[SomeAbortableException])
         circuit_breaker = CircuitBreaker(maximum_failures=2)
+
+        circuit_breaker.record_failure = MagicMock()
         with pytest.raises(SomeAbortableException):
             loop.run_until_complete(
                 Failsafe(exception_handling_policy=policy, circuit_breaker=circuit_breaker)
                 .run(aborting_operation)
             )
+        circuit_breaker.record_failure.assert_not_called()
 
         assert aborting_operation.called == 1
