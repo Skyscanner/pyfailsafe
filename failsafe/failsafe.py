@@ -75,11 +75,11 @@ class Failsafe:
                 return result
 
             except Exception as e:
+                if self.exception_handling_policy.should_abort(e):
+                    raise
                 context.errors += 1
                 recent_exception = e
                 retry = self.exception_handling_policy.should_retry(context, e)
-                if self.exception_handling_policy.should_raise(e):
-                    raise
                 self.circuit_breaker.record_failure()
 
                 if retry:

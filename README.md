@@ -85,10 +85,10 @@ await Failsafe(exception_handling_policy=retry_policy).run(my_async_function)
 
 ExceptionHandlingPolicy instances are stateless. They can be safely shared between Failsafe instances.
 
-### Failsafe call with raisable exceptions
+### Failsafe call with abortable exceptions
 
 If you need your code to be able to raise certain exceptions that should not be handled by the failsafe, 
-you can add them as raisable_exceptions in ExceptionHandlingPolicy
+you can add them as abortable_exceptions in ExceptionHandlingPolicy
 
 ```python
 from failsafe import Failsafe, ExceptionHandlingPolicy
@@ -96,7 +96,7 @@ from failsafe import Failsafe, ExceptionHandlingPolicy
 async def my_async_function():
     raise ValueError()  # by default, every exception will cause a retry
 
-exception_policy = ExceptionHandlingPolicy(raisable_exceptions=[ValueError])
+exception_policy = ExceptionHandlingPolicy(abortable_exceptions=[ValueError])
 
 await Failsafe(exception_handling_policy=exception_policy).run(my_async_function)
 # raises ValueError
@@ -128,6 +128,8 @@ await failsafe.run(my_async_function)
 A circuit breaker instance can and should be shared across code that accesses inter-dependent system components that fail together. This ensures that if the circuit is opened, executions against one component that rely on another component will not be allowed until the circuit is closed again.
 
 A circuit breaker instance is stateful - it remembers how many failures occur and whether the circuit is open or closed.
+
+A circuit breaker will not take into account abortable exceptions.
 
 #### CircuitBreaker interface
 

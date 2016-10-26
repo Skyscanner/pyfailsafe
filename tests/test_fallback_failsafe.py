@@ -20,23 +20,6 @@ from failsafe import ExceptionHandlingPolicy
 loop = asyncio.get_event_loop()
 
 
-def create_succeeding_operation():
-    async def operation():
-        operation.called += 1
-
-    operation.called = 0
-    return operation
-
-
-def create_failing_operation():
-    async def operation():
-        operation.called += 1
-        raise Exception()
-
-    operation.called = 0
-    return operation
-
-
 class TestFallbackFailsafe(unittest.TestCase):
     def test_value_is_called(self):
         async def call(option):
@@ -92,15 +75,14 @@ class TestFallbackFailsafe(unittest.TestCase):
         assert result == "return value"
 
     def test_inner_exception_is_raised(self):
-        async def call(fallback_option, positional_argument, *args, **kwargs):
-            raise ValueError("dummy exception")
+        async def call(fallback_option):
+            assert fallback_option == "fallback option1"
+            raise ValueError()
 
-        fallback_failsafe = FallbackFailsafe(["fallback option"],
-                                             exception_handling_policy_factory=lambda _: ExceptionHandlingPolicy(
-                                                 raisable_exceptions=[ValueError]
-                                             ))
-        self.assertRaisesRegex(
-            ValueError,
-            "dummy exception", loop.run_until_complete,
-            fallback_failsafe.run(call, "positional argument", "arg1", "arg2", key1="value1", key2="value2")
-        )
+        policy = ExceptionHandlingPolicy(abortable_exceptions=[ValueError])
+        fallback_failsafe = FallbackFailsafe(["fallback option1", "fallback option2"],
+                                             exception_handling_policy_factory=lambda _: policy)
+        with pytest.raises(ValueError):
+            loop.run_until_complete(
+                fallback_failsafe.run(call))
+

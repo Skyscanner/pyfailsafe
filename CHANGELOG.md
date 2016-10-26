@@ -3,7 +3,8 @@ All notable changes to this project will be documented in this file.
 
 ## [0.2.0]
 ### Added
-- ExceptionHandlerPolicy
+- ExceptionHandlerPolicy: Replaces RetryPolicy extending its functionality with 
+ abortable exceptions that will cause the failsafe run to finish.
 ### Removed
 - RetryPolicy
 

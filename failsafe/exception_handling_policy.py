@@ -14,17 +14,17 @@
 class ExceptionHandlingPolicy:
     """
     Model to store the number of allowed retries, the allowed retriable exceptions
-    and the exceptions that should be re-raised
+    and the exceptions that should abort the failsafe run
     """
 
-    def __init__(self, allowed_retries=3, retriable_exceptions=None, raisable_exceptions=None):
+    def __init__(self, allowed_retries=3, retriable_exceptions=None, abortable_exceptions=None):
         self.allowed_retries = allowed_retries
         if retriable_exceptions is None:
             retriable_exceptions = []
         self.retriable_exceptions = retriable_exceptions
-        if raisable_exceptions is None:
-            raisable_exceptions = []
-        self.raisable_exceptions = raisable_exceptions
+        if abortable_exceptions is None:
+            abortable_exceptions = []
+        self.abortable_exceptions = abortable_exceptions
 
     def should_retry(self, context, exception=None):
         """
@@ -35,18 +35,17 @@ class ExceptionHandlingPolicy:
         :param exception: Exception which caused failure to be considered
             retriable or not raised during the execution.
         """
-        return context.attempts <= self.allowed_retries and self._is_expected_exception(exception)
+        return context.attempts <= self.allowed_retries and self._is_retriable_exception(exception)
 
-    def _is_expected_exception(self, exception):
+    def _is_retriable_exception(self, exception):
         return any(isinstance(exception, e) for e in self.retriable_exceptions) if self.retriable_exceptions else True
 
-    def should_raise(self, exception=None):
+    def should_abort(self, exception=None):
         """
-        Returns a boolean indicating if we should raise and propagate the given exception
+        Returns a boolean indicating if we should abort the run and propagate the given exception
         outside the failsafe
 
-        :param context: :class:`failsafe.failsafe.Context`.
         :param exception: Exception which caused failure to be considered
-            raisable or not raised during the execution.
+            abortable or not during the execution.
         """
-        return any(isinstance(exception, e) for e in self.raisable_exceptions) if self.raisable_exceptions else False
+        return any(isinstance(exception, e) for e in self.abortable_exceptions) if self.abortable_exceptions else False

@@ -66,7 +66,7 @@ class TestRetryPolicy:
         assert retry_policy.should_retry(context, ValueError()) is True
 
     def test_should_raise(self):
-        raise_policy = ExceptionHandlingPolicy(raisable_exceptions=[AttributeError])
-        assert raise_policy.should_raise(BufferError()) is False
-        assert raise_policy.should_raise(ValueError()) is False
-        assert raise_policy.should_raise(AttributeError()) is True
+        raise_policy = ExceptionHandlingPolicy(abortable_exceptions=[AttributeError])
+        assert raise_policy.should_abort(BufferError()) is False
+        assert raise_policy.should_abort(ValueError()) is False
+        assert raise_policy.should_abort(AttributeError()) is True
