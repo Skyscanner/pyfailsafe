@@ -20,16 +20,18 @@ class GitHubClientError(Exception):
 
 class GitHubClient:
     def __init__(self):
-        self.failsafe = Failsafe(exception_handling_policy=ExceptionHandlingPolicy(allowed_retries=4),
+        self.failsafe = Failsafe(exception_handling_policy=ExceptionHandlingPolicy(abortable_exceptions=[ValueError]),
                                  circuit_breaker=CircuitBreaker(maximum_failures=8))
 
     async def get_repositories_by_user(self, github_user):
-        url = 'https://api.github.com/orgs/{}/repos'.format(github_user)
+        url = 'NOT A URL'
 
         try:
             return await self.failsafe.run(lambda: self._request(url))
         except FailsafeError as e:
             raise GitHubClientError("Could not load repositories") from e
+        except ValueError as e:
+            print("There's a problem with the url: {}".format(e))
 
     async def _request(self, url):
         with aiohttp.ClientSession() as session:
@@ -47,7 +49,8 @@ if __name__ == "__main__":
         github_client = GitHubClient()
         repositories = await github_client.get_repositories_by_user('skyscanner')
 
-        pprint(repositories[0])
+        if repositories:
+            pprint(repositories[0])
 
     import asyncio
     loop = asyncio.get_event_loop()
