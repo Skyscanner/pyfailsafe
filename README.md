@@ -88,15 +88,16 @@ RetryPolicy instances are stateless. They can be safely shared between Failsafe 
 ### Failsafe call with abortable exceptions
 
 If you need your code to be able to raise certain exceptions that should not be handled by the failsafe, 
-you can add them as abortable_exceptions in RetryPolicy
+you can add them as abortable_exceptions in RetryPolicy. This is useful when you know that the nature of failure was
+such that consecutive calls would never succeed.
 
 ```python
 from failsafe import Failsafe, RetryPolicy
 
 async def my_async_function():
-    raise ValueError()  # by default, every exception will cause a retry
+    raise ValueError()  # ValueError is an abortable exception, so it will not cause retry
 
-retry_policy = RetryPolicy(abortable_exceptions=[ValueError])
+retry_policy = RetryPolicy(allowed_retries=4, abortable_exceptions=[ValueError])
 
 await Failsafe(retry_policy=retry_policy).run(my_async_function)
 # raises ValueError
