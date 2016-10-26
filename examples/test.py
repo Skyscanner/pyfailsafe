@@ -11,11 +11,12 @@
 # limitations under the License.
 
 import asyncio
+import pytest
 
 loop = asyncio.get_event_loop()
 
 
-def test_simple_failsafe():
+def test_simple_failsafe_should_return_when_user_exists():
     from examples.simple_failsafe import GitHubClient
 
     github_client = GitHubClient()
@@ -25,6 +26,17 @@ def test_simple_failsafe():
     )
 
     assert result is not None
+
+
+def test_simple_failsafe_should_raise_when_user_not_exists():
+    from examples.simple_failsafe import GitHubClient, UserNotFoundError
+
+    github_client = GitHubClient()
+
+    with pytest.raises(UserNotFoundError):
+        loop.run_until_complete(
+            github_client.get_repositories_by_user('not-existing-user')
+        )
 
 
 def test_failsafe_with_fallback():
