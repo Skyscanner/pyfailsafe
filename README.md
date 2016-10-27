@@ -85,6 +85,25 @@ await Failsafe(retry_policy=retry_policy).run(my_async_function)
 
 RetryPolicy instances are stateless. They can be safely shared between Failsafe instances.
 
+### Failsafe call with abortable exceptions
+
+If you need your code to be able to raise certain exceptions that should not be handled by the failsafe, 
+you can add them as abortable_exceptions in RetryPolicy. This is useful when you know that the nature of failure was
+such that consecutive calls would never succeed.
+
+```python
+from failsafe import Failsafe, RetryPolicy
+
+async def my_async_function():
+    raise ValueError()  # ValueError is an abortable exception, so it will not cause retry
+
+retry_policy = RetryPolicy(allowed_retries=4, abortable_exceptions=[ValueError])
+
+await Failsafe(retry_policy=retry_policy).run(my_async_function)
+# raises ValueError
+# my_async_function was called 1 time (1 regular call)
+```
+
 ### Circuit breakers
 
 [Circuit breakers](http://martinfowler.com/bliki/CircuitBreaker.html) are a way of creating systems that fail-fast by temporarily disabling execution as a way of preventing system overload. 
@@ -110,6 +129,8 @@ await failsafe.run(my_async_function)
 A circuit breaker instance can and should be shared across code that accesses inter-dependent system components that fail together. This ensures that if the circuit is opened, executions against one component that rely on another component will not be allowed until the circuit is closed again.
 
 A circuit breaker instance is stateful - it remembers how many failures occur and whether the circuit is open or closed.
+
+A circuit breaker will not take into account abortable exceptions.
 
 #### CircuitBreaker interface
 

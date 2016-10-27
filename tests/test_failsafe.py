@@ -12,6 +12,7 @@
 
 import asyncio
 import unittest
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -38,7 +39,20 @@ def create_failing_operation():
     return operation
 
 
+def create_aborting_operation():
+    async def operation():
+        operation.called += 1
+        raise SomeAbortableException()
+
+    operation.called = 0
+    return operation
+
+
 class SomeRetriableException(Exception):
+    pass
+
+
+class SomeAbortableException(Exception):
     pass
 
 
@@ -104,7 +118,7 @@ class TestFailsafe(unittest.TestCase):
 
         assert failing_operation.called == retries + 1
 
-    def test_circuit_breaker(self):
+    def test_circuit_breaker_with_retries(self):
         failing_operation = create_failing_operation()
 
         with pytest.raises(CircuitOpen):
@@ -116,3 +130,19 @@ class TestFailsafe(unittest.TestCase):
             )
 
         assert failing_operation.called == 2
+
+    def test_circuit_breaker_with_abort(self):
+        aborting_operation = create_aborting_operation()
+
+        policy = RetryPolicy(abortable_exceptions=[SomeAbortableException])
+        circuit_breaker = CircuitBreaker(maximum_failures=2)
+
+        circuit_breaker.record_failure = MagicMock()
+        with pytest.raises(SomeAbortableException):
+            loop.run_until_complete(
+                Failsafe(retry_policy=policy, circuit_breaker=circuit_breaker)
+                .run(aborting_operation)
+            )
+        circuit_breaker.record_failure.assert_not_called()
+
+        assert aborting_operation.called == 1

@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.2.0]
+### Added
+- Extend RetryPolicy's functionality with abortable exceptions that will cause Failsafe and FallbackFailsafe to abort execution immediately and raise the exception outside
+
 ## [0.1.3]
 ### Added
 - Docstrings

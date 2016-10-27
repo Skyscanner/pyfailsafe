@@ -40,7 +40,8 @@ class FallbackFailsafe:
         circuit_breaker_factory = circuit_breaker_factory or (lambda _: CircuitBreaker())
 
         def _create_failsafe(option):
-            return Failsafe(retry_policy=retry_policy_factory(option), circuit_breaker=circuit_breaker_factory(option))
+            return Failsafe(retry_policy=retry_policy_factory(option),
+                            circuit_breaker=circuit_breaker_factory(option))
 
         self.failsafes = [(option, _create_failsafe(option))
                           for option in fallback_options]
@@ -60,6 +61,9 @@ class FallbackFailsafe:
             except FailsafeError as e:
                 recent_exception = e
                 logger.debug("Fallback option {} failed".format(fallback_option))
+            except Exception as e:
+                logger.debug("Aborting FallbackFailsafe, exception {}".format(type(e).__name__))
+                raise
 
         logger.debug("No more fallbacks")
         raise FallbacksExhausted("No more fallbacks") from recent_exception

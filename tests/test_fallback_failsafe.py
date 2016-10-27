@@ -15,25 +15,9 @@ import unittest
 import pytest
 
 from failsafe import FallbackFailsafe, FallbacksExhausted
+from failsafe import RetryPolicy
 
 loop = asyncio.get_event_loop()
-
-
-def create_succeeding_operation():
-    async def operation():
-        operation.called += 1
-
-    operation.called = 0
-    return operation
-
-
-def create_failing_operation():
-    async def operation():
-        operation.called += 1
-        raise Exception()
-
-    operation.called = 0
-    return operation
 
 
 class TestFallbackFailsafe(unittest.TestCase):
@@ -89,3 +73,15 @@ class TestFallbackFailsafe(unittest.TestCase):
         )
 
         assert result == "return value"
+
+    def test_original_exception_is_raised_and_fallback_is_not_executed_on_abortion(self):
+        async def call(fallback_option):
+            assert fallback_option == "fallback option1"
+            raise ValueError()
+
+        policy = RetryPolicy(abortable_exceptions=[ValueError])
+        fallback_failsafe = FallbackFailsafe(["fallback option1", "fallback option2"],
+                                             retry_policy_factory=lambda _: policy)
+        with pytest.raises(ValueError):
+            loop.run_until_complete(
+                fallback_failsafe.run(call))
