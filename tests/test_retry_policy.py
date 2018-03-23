@@ -9,9 +9,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from failsafe.failsafe import Context
-from failsafe.retry_policy import RetryPolicy
+from failsafe.retry_policy import RetryPolicy, Delay, Backoff
+
+from datetime import timedelta
 
 
 class TestRetryPolicy:
@@ -69,3 +70,16 @@ class TestRetryPolicy:
         raise_policy = RetryPolicy(abortable_exceptions=[AttributeError])
         assert raise_policy.should_abort(BufferError()) is False
         assert raise_policy.should_abort(AttributeError()) is True
+
+    def test_delay(self):
+        delay = Delay(timedelta(seconds=1))
+        assert next(delay) == 1.0
+        assert next(delay) == 1.0
+        assert next(delay) == 1.0
+
+    def test_backoff(self):
+        backoff = Backoff(timedelta(seconds=1), timedelta(seconds=5))
+        assert next(backoff) == 1.0
+        assert next(backoff) == 2.0
+        assert next(backoff) == 4.0
+        assert next(backoff) == 5.0
