@@ -13,10 +13,13 @@
 import asyncio
 import unittest
 from unittest.mock import MagicMock
-
 import pytest
 
-from failsafe import RetryPolicy, Failsafe, CircuitOpen, CircuitBreaker, RetriesExhausted
+from failsafe import (
+    RetryPolicy, Failsafe, CircuitOpen, CircuitBreaker, RetriesExhausted, Delay,
+    Backoff,
+)
+from datetime import timedelta
 
 
 loop = asyncio.get_event_loop()
@@ -111,6 +114,94 @@ class TestFailsafe(unittest.TestCase):
 
         assert failing_operation.called == 0
 
+        with pytest.raises(RetriesExhausted):
+            loop.run_until_complete(
+                failsafe.run(failing_operation)
+            )
+
+        assert failing_operation.called == retries + 1
+
+    def test_retry_after_delay(self):
+        failing_operation = create_failing_operation()
+        retries = 4
+        delay = Delay(timedelta(seconds=0.2))
+        policy = RetryPolicy(retries, [SomeRetriableException], delay=delay)
+        failsafe = Failsafe(retry_policy=policy)
+
+        assert failing_operation.called == 0
+
+        with pytest.raises(asyncio.TimeoutError):
+            loop.run_until_complete(
+                asyncio.wait_for(failsafe.run(failing_operation), 0.1)
+            )
+        assert failing_operation.called == 1
+
+        failing_operation.called = 0
+        with pytest.raises(asyncio.TimeoutError):
+            loop.run_until_complete(
+                asyncio.wait_for(failsafe.run(failing_operation), 0.3)
+            )
+        assert failing_operation.called == 2
+
+        failing_operation.called = 0
+        with pytest.raises(asyncio.TimeoutError):
+            loop.run_until_complete(
+                asyncio.wait_for(failsafe.run(failing_operation), 0.5)
+            )
+        assert failing_operation.called == 3
+
+        failing_operation.called = 0
+        with pytest.raises(RetriesExhausted):
+            loop.run_until_complete(
+                failsafe.run(failing_operation)
+            )
+
+        assert failing_operation.called == retries + 1
+
+    def test_retry_after_backoff(self):
+        failing_operation = create_failing_operation()
+        retries = 5
+        backoff = Backoff(timedelta(seconds=0.2), timedelta(seconds=1))
+        policy = RetryPolicy(retries, [SomeRetriableException], backoff=backoff)
+        failsafe = Failsafe(retry_policy=policy)
+
+        assert failing_operation.called == 0
+
+        with pytest.raises(asyncio.TimeoutError):
+            loop.run_until_complete(
+                asyncio.wait_for(failsafe.run(failing_operation), 0.1)
+            )
+        assert failing_operation.called == 1
+
+        failing_operation.called = 0
+        with pytest.raises(asyncio.TimeoutError):
+            loop.run_until_complete(
+                asyncio.wait_for(failsafe.run(failing_operation), 0.3)
+            )
+        assert failing_operation.called == 2
+
+        failing_operation.called = 0
+        with pytest.raises(asyncio.TimeoutError):
+            loop.run_until_complete(
+                asyncio.wait_for(failsafe.run(failing_operation), 0.7)
+            )
+        assert failing_operation.called == 3
+
+        failing_operation.called = 0
+        with pytest.raises(asyncio.TimeoutError):
+            loop.run_until_complete(
+                asyncio.wait_for(failsafe.run(failing_operation), 1.6)
+            )
+        assert failing_operation.called == 4
+
+        failing_operation.called = 0
+        with pytest.raises(asyncio.TimeoutError):
+            loop.run_until_complete(
+                asyncio.wait_for(failsafe.run(failing_operation), 2.6)
+            )
+        assert failing_operation.called == 5
+
+        failing_operation.called = 0
         with pytest.raises(RetriesExhausted):
             loop.run_until_complete(
                 failsafe.run(failing_operation)

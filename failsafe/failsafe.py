@@ -10,6 +10,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+import asyncio
 import logging
 
 from failsafe.circuit_breaker import AlwaysClosedCircuitBreaker
@@ -66,6 +68,8 @@ class Failsafe:
         recent_exception = None
         retry = True
         context = Context()
+        if self.retry_policy.backoff:
+            self.retry_policy.backoff.reset()
 
         while retry:
             if not self.circuit_breaker.allows_execution():
@@ -87,6 +91,9 @@ class Failsafe:
                 self.circuit_breaker.record_failure()
 
                 if retry:
+                    if self.retry_policy.sleep:
+                        logger.debug("Waiting {}".format(self.retry_policy.sleep))
+                        await asyncio.sleep(next(self.retry_policy.sleep))
                     logger.debug("Retrying call")
 
         raise RetriesExhausted() from recent_exception

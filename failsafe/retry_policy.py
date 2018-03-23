@@ -10,6 +10,56 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from datetime import timedelta
+import random
+
+
+class Delay:
+    def __init__(self, delay):
+        assert isinstance(delay, timedelta), "`delay` must be an instance of `datetime.timedelta`."
+        self.delay = delay
+
+    def __str__(self):
+        return "{}s".format(self.delay.total_seconds())
+
+    def __next__(self):
+        return self.delay.total_seconds()
+
+
+class Backoff:
+    def __init__(self, delay, max_delay, factor=2, jitter=False):
+        assert isinstance(delay, timedelta), "`delay` must be an instance of `datetime.timedelta`."
+        assert isinstance(max_delay, timedelta), "`max_delay` must be an instance of `datetime.timedelta`."
+        self.delay = delay
+        self.max_delay = max_delay
+        self.factor = factor
+        self.jitter = jitter
+        self.attempt = 0
+
+    def reset(self):
+        self.attempt = 0
+
+    def for_attempt(self, attempt):
+        delay = self.delay.total_seconds()
+        dur = float(delay * pow(self.factor, attempt))
+        max_delay = self.max_delay.total_seconds()
+
+        if self.jitter is True:
+            dur = random.random() * (dur - delay) + delay
+
+        if dur > max_delay:
+            return max_delay
+
+        return dur
+
+    def __str__(self):
+        return "{}s".format(self.for_attempt(self.attempt))
+
+    def __next__(self):
+        delay = self.for_attempt(self.attempt)
+        self.attempt += 1
+        return delay
+
 
 class RetryPolicy:
     """
@@ -17,7 +67,8 @@ class RetryPolicy:
     and the exceptions that should abort the failsafe run.
     """
 
-    def __init__(self, allowed_retries=3, retriable_exceptions=None, abortable_exceptions=None):
+    def __init__(self, allowed_retries=3, retriable_exceptions=None, abortable_exceptions=None, delay=None,
+                 backoff=None):
         """
         Constructs RetryPolicy.
 
@@ -30,6 +81,9 @@ class RetryPolicy:
         self.allowed_retries = allowed_retries
         self.retriable_exceptions = retriable_exceptions
         self.abortable_exceptions = abortable_exceptions
+        self.delay = delay
+        self.backoff = backoff
+        self.sleep = delay or backoff
 
     def should_retry(self, context, exception):
         """
