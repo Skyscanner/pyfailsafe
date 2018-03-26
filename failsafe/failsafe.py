@@ -68,14 +68,16 @@ class Failsafe:
         recent_exception = None
         retry = True
         context = Context()
-        if self.retry_policy.backoff:
-            self.retry_policy.backoff.reset()
 
         while retry:
             if not self.circuit_breaker.allows_execution():
                 logger.debug("Circuit open, stopping execution")
                 raise CircuitOpen()
             try:
+                if self.retry_policy.backoff is not None:
+                    wait_for = self.retry_policy.backoff.for_attempt(context.attempts)
+                else:
+                    wait_for = None
                 context.attempts += 1
                 result = await callable()
                 self.circuit_breaker.record_success()
@@ -91,9 +93,9 @@ class Failsafe:
                 self.circuit_breaker.record_failure()
 
                 if retry:
-                    if self.retry_policy.sleep:
-                        logger.debug("Waiting {}".format(self.retry_policy.sleep))
-                        await asyncio.sleep(next(self.retry_policy.sleep))
+                    if wait_for is not None:
+                        logger.debug("Waiting {}s".format(wait_for))
+                        await asyncio.sleep(wait_for)
                     logger.debug("Retrying call")
 
         raise RetriesExhausted() from recent_exception

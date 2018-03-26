@@ -125,7 +125,7 @@ class TestFailsafe(unittest.TestCase):
         failing_operation = create_failing_operation()
         retries = 4
         delay = Delay(timedelta(seconds=0.2))
-        policy = RetryPolicy(retries, [SomeRetriableException], delay=delay)
+        policy = RetryPolicy(retries, [SomeRetriableException], backoff=delay)
         failsafe = Failsafe(retry_policy=policy)
 
         assert failing_operation.called == 0

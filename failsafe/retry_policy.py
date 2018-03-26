@@ -22,10 +22,6 @@ class Backoff:
         self.max_delay = max_delay
         self.factor = factor
         self.jitter = jitter
-        self.attempt = 0
-
-    def reset(self):
-        self.attempt = 0
 
     def for_attempt(self, attempt):
         delay = self.delay.total_seconds()
@@ -40,13 +36,7 @@ class Backoff:
 
         return duration
 
-    def __str__(self):
-        return "{}s".format(self.for_attempt(self.attempt))
 
-    def __next__(self):
-        delay = self.for_attempt(self.attempt)
-        self.attempt += 1
-        return delay
 class Delay(Backoff):
     def __init__(self, delay):
         super(Delay, self).__init__(delay, delay, factor=1, jitter=False)
@@ -58,7 +48,7 @@ class RetryPolicy:
     and the exceptions that should abort the failsafe run.
     """
 
-    def __init__(self, allowed_retries=3, retriable_exceptions=None, abortable_exceptions=None, delay=None,
+    def __init__(self, allowed_retries=3, retriable_exceptions=None, abortable_exceptions=None,
                  backoff=None):
         """
         Constructs RetryPolicy.
@@ -72,9 +62,7 @@ class RetryPolicy:
         self.allowed_retries = allowed_retries
         self.retriable_exceptions = retriable_exceptions
         self.abortable_exceptions = abortable_exceptions
-        self.delay = delay
         self.backoff = backoff
-        self.sleep = delay or backoff
 
     def should_retry(self, context, exception):
         """

@@ -73,13 +73,13 @@ class TestRetryPolicy:
 
     def test_delay(self):
         delay = Delay(timedelta(seconds=1))
-        assert next(delay) == 1.0
-        assert next(delay) == 1.0
-        assert next(delay) == 1.0
+        assert delay.for_attempt(0) == 1.0
+        assert delay.for_attempt(1) == 1.0
+        assert delay.for_attempt(2) == 1.0
 
     def test_backoff(self):
         backoff = Backoff(timedelta(seconds=1), timedelta(seconds=5))
-        assert next(backoff) == 1.0
-        assert next(backoff) == 2.0
-        assert next(backoff) == 4.0
-        assert next(backoff) == 5.0
+        assert backoff.for_attempt(0) == 1.0
+        assert backoff.for_attempt(1) == 2.0
+        assert backoff.for_attempt(2) == 4.0
+        assert backoff.for_attempt(3) == 5.0
