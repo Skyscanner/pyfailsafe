@@ -13,6 +13,7 @@ from failsafe.failsafe import Context
 from failsafe.retry_policy import RetryPolicy, Delay, Backoff
 
 from datetime import timedelta
+import random
 
 
 class TestRetryPolicy:
@@ -83,3 +84,11 @@ class TestRetryPolicy:
         assert backoff.for_attempt(1) == 2.0
         assert backoff.for_attempt(2) == 4.0
         assert backoff.for_attempt(3) == 5.0
+
+    def test_backoff_jitter(self):
+        random.seed(123)
+        backoff = Backoff(timedelta(seconds=1), timedelta(seconds=5), jitter=True)
+        assert round(backoff.for_attempt(0), 3) == 1.052
+        assert round(backoff.for_attempt(1), 3) == 2.087
+        assert round(backoff.for_attempt(2), 3) == 4.407
+        assert round(backoff.for_attempt(3), 3) == 5.0
