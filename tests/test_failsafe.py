@@ -122,10 +122,15 @@ class TestFailsafe(unittest.TestCase):
         assert failing_operation.called == retries + 1
 
     def test_delay(self):
-        retries = 3
+        failing_operation = create_failing_operation()
+        retries = 1
         delay = Delay(timedelta(seconds=0.2))
         policy = RetryPolicy(retries, [SomeRetriableException], backoff=delay)
-        Failsafe(retry_policy=policy)
+        with pytest.raises(RetriesExhausted):
+            loop.run_until_complete(
+                Failsafe(retry_policy=policy)
+                .run(failing_operation)
+            )
 
     def test_backoff(self):
         retries = 3
