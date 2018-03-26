@@ -14,18 +14,6 @@ from datetime import timedelta
 import random
 
 
-class Delay:
-    def __init__(self, delay):
-        assert isinstance(delay, timedelta), "`delay` must be an instance of `datetime.timedelta`."
-        self.delay = delay
-
-    def __str__(self):
-        return "{}s".format(self.delay.total_seconds())
-
-    def __next__(self):
-        return self.delay.total_seconds()
-
-
 class Backoff:
     def __init__(self, delay, max_delay, factor=2, jitter=False):
         assert isinstance(delay, timedelta), "`delay` must be an instance of `datetime.timedelta`."
@@ -59,6 +47,9 @@ class Backoff:
         delay = self.for_attempt(self.attempt)
         self.attempt += 1
         return delay
+class Delay(Backoff):
+    def __init__(self, delay):
+        super(Delay, self).__init__(delay, delay, factor=1, jitter=False)
 
 
 class RetryPolicy:
