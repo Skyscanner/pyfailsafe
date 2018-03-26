@@ -29,7 +29,7 @@ class Backoff:
         max_delay = self.max_delay.total_seconds()
 
         if self.jitter is True:
-            duration = random.random() * (duration - delay) + delay
+            duration += random.random()
 
         if duration > max_delay:
             return max_delay
