@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 ## [0.3.0]
 ### Added
-- Add delay and backoff options to `RetryPolicy`
+- Add `backoff` option to `RetryPolicy`
 
 ## [0.2.0]
 ### Added
