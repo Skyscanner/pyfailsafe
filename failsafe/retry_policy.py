@@ -16,8 +16,11 @@ import random
 
 class Backoff:
     def __init__(self, delay, max_delay, factor=2, jitter=False):
-        assert isinstance(delay, timedelta), "`delay` must be an instance of `datetime.timedelta`."
-        assert isinstance(max_delay, timedelta), "`max_delay` must be an instance of `datetime.timedelta`."
+        if not isinstance(delay, timedelta):
+            raise ValueError("`delay` must be an instance of `datetime.timedelta`.")
+        if not isinstance(max_delay, timedelta):
+            raise ValueError("`max_delay` must be an instance of `datetime.timedelta`.")
+
         self.delay = delay
         self.max_delay = max_delay
         self.factor = factor
