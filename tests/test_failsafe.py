@@ -12,7 +12,7 @@
 
 import asyncio
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock, call
 import pytest
 
 from failsafe import (
@@ -23,6 +23,14 @@ from datetime import timedelta
 
 
 loop = asyncio.get_event_loop()
+
+
+def get_mock_coro(return_value):
+    @asyncio.coroutine
+    def mock_coro(*args, **kwargs):
+        return return_value
+
+    return Mock(wraps=mock_coro)
 
 
 def create_succeeding_operation():
@@ -133,10 +141,22 @@ class TestFailsafe(unittest.TestCase):
             )
 
     def test_backoff(self):
+        failing_operation = create_failing_operation()
         retries = 3
         backoff = Backoff(timedelta(seconds=0.2), timedelta(seconds=1))
         policy = RetryPolicy(retries, [SomeRetriableException], backoff=backoff)
         Failsafe(retry_policy=policy)
+        asyncio.sleep = get_mock_coro(None)
+        with pytest.raises(RetriesExhausted):
+            loop.run_until_complete(
+                Failsafe(retry_policy=policy)
+                .run(failing_operation)
+            )
+        assert asyncio.sleep.mock_calls == [
+            call(0.2),
+            call(0.4),
+            call(0.8),
+        ]
 
     def test_circuit_breaker_with_retries(self):
         failing_operation = create_failing_operation()
