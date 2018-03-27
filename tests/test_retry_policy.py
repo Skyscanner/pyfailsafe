@@ -102,7 +102,8 @@ class TestRetryPolicy:
     def test_backoff_jitter(self):
         random.seed(123)
         backoff = Backoff(timedelta(seconds=1), timedelta(seconds=5), jitter=True)
-        assert round(backoff.for_attempt(0), 3) == 1.052
-        assert round(backoff.for_attempt(1), 3) == 2.087
-        assert round(backoff.for_attempt(2), 3) == 4.407
-        assert round(backoff.for_attempt(3), 3) == 5.0
+        assert round(backoff.for_attempt(0), 3) == 0.052
+        assert round(backoff.for_attempt(1), 3) == 0.174
+        assert round(backoff.for_attempt(2), 3) == 1.629
+        assert round(backoff.for_attempt(3), 3) == 0.862
+        assert round(backoff.for_attempt(4), 3) == 5.0
