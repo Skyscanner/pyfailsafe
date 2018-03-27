@@ -9,6 +9,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import pytest
 from failsafe.failsafe import Context
 from failsafe.retry_policy import RetryPolicy, Delay, Backoff
 
@@ -73,12 +75,24 @@ class TestRetryPolicy:
         assert raise_policy.should_abort(AttributeError()) is True
 
     def test_delay(self):
+        with pytest.raises(ValueError):
+            Delay(1)
+
         delay = Delay(timedelta(seconds=1))
         assert delay.for_attempt(0) == 1.0
         assert delay.for_attempt(1) == 1.0
         assert delay.for_attempt(2) == 1.0
 
     def test_backoff(self):
+        with pytest.raises(ValueError):
+            Backoff(1, 5)
+
+        with pytest.raises(ValueError):
+            Backoff(timedelta(seconds=1), 5)
+
+        with pytest.raises(ValueError):
+            Backoff(1, timedelta(seconds=5))
+
         backoff = Backoff(timedelta(seconds=1), timedelta(seconds=5))
         assert backoff.for_attempt(0) == 1.0
         assert backoff.for_attempt(1) == 2.0
