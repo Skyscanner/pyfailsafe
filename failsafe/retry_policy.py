@@ -29,10 +29,9 @@ class Backoff:
     def for_attempt(self, attempt):
         delay = self.delay.total_seconds()
         duration = float(delay * pow(self.factor, attempt))
-        max_delay = self.max_delay.total_seconds()
-
         if self.jitter is True:
-            duration *= random.random()
+            duration = random.uniform(0.0, duration)
+        max_delay = self.max_delay.total_seconds()
 
         if duration > max_delay:
             return max_delay

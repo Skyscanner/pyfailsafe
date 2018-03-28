@@ -107,3 +107,6 @@ class TestRetryPolicy:
         assert round(backoff.for_attempt(2), 3) == 1.629
         assert round(backoff.for_attempt(3), 3) == 0.862
         assert round(backoff.for_attempt(4), 3) == 5.0
+
+        for i in range(4):
+            assert round(backoff.for_attempt(i), 3) <= 5.0
