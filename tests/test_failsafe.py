@@ -129,9 +129,10 @@ class TestFailsafe(unittest.TestCase):
 
         assert failing_operation.called == retries + 1
 
+    @unittest.mock.patch('asyncio.sleep', get_mock_coro(None))
     def test_delay(self):
         failing_operation = create_failing_operation()
-        retries = 1
+        retries = 3
         delay = Delay(timedelta(seconds=0.2))
         policy = RetryPolicy(retries, [SomeRetriableException], backoff=delay)
         with pytest.raises(RetriesExhausted):
@@ -139,14 +140,19 @@ class TestFailsafe(unittest.TestCase):
                 Failsafe(retry_policy=policy)
                 .run(failing_operation)
             )
+        assert asyncio.sleep.mock_calls == [
+            call(0.2),
+            call(0.2),
+            call(0.2),
+        ]
 
+    @unittest.mock.patch('asyncio.sleep', get_mock_coro(None))
     def test_backoff(self):
         failing_operation = create_failing_operation()
         retries = 3
         backoff = Backoff(timedelta(seconds=0.2), timedelta(seconds=1))
         policy = RetryPolicy(retries, [SomeRetriableException], backoff=backoff)
         Failsafe(retry_policy=policy)
-        asyncio.sleep = get_mock_coro(None)
         with pytest.raises(RetriesExhausted):
             loop.run_until_complete(
                 Failsafe(retry_policy=policy)
