@@ -15,6 +15,9 @@ import random
 
 
 class Backoff:
+    """
+    Base class to determine how long to wait between calls.
+    """
     def __init__(self, delay, max_delay, factor=2, jitter=False):
         if not isinstance(delay, timedelta):
             raise ValueError("`delay` must be an instance of `datetime.timedelta`.")
@@ -27,6 +30,13 @@ class Backoff:
         self.jitter = jitter
 
     def for_attempt(self, attempt):
+        """
+        Subclasses should override this method to return the amount of time to wait
+        before the next attempt, in seconds.
+
+        :param attempt:
+        :return:
+        """
         delay = self.delay.total_seconds()
         duration = float(delay * pow(self.factor, attempt))
         if self.jitter is True:
@@ -40,6 +50,9 @@ class Backoff:
 
 
 class Delay(Backoff):
+    """
+    A special case of ``Backoff` where the wait between calls is constant.
+    """
     def __init__(self, delay):
         super(Delay, self).__init__(delay, delay, factor=1, jitter=False)
 
