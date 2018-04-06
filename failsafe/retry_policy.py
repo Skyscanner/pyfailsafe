@@ -88,7 +88,14 @@ class RetryPolicy:
         :param exception: Exception which caused failure to be considered
             retriable or not raised during the execution.
         """
-        return context.attempts <= self.allowed_retries and self._is_retriable_exception(exception)
+        should_retry = context.attempts <= self.allowed_retries and self._is_retriable_exception(exception)
+
+        if self.backoff is not None:
+            wait_for = self.backoff.for_attempt(context.attempts - 1)
+        else:
+            wait_for = 0
+
+        return should_retry, wait_for
 
     def should_abort(self, exception):
         """

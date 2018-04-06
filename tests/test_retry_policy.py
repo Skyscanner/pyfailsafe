@@ -26,7 +26,7 @@ class TestRetryPolicy:
         context = Context()
         context.attempts = 3
 
-        assert retry_policy.should_retry(context, Exception()) is True
+        assert retry_policy.should_retry(context, Exception()) == (True, 0)
 
     def test_should_not_retry_when_there_were_too_many_attempts(self):
         retry_policy = RetryPolicy(allowed_retries=3)
@@ -34,7 +34,7 @@ class TestRetryPolicy:
         context = Context()
         context.attempts = 4
 
-        assert retry_policy.should_retry(context, Exception()) is False
+        assert retry_policy.should_retry(context, Exception()) == (False, 0)
 
     def test_should_not_retry_when_exception_is_not_retriable(self):
         retry_policy = RetryPolicy(allowed_retries=3, retriable_exceptions=[BufferError])
@@ -42,7 +42,7 @@ class TestRetryPolicy:
         context = Context()
         context.attempts = 3
 
-        assert retry_policy.should_retry(context, ArithmeticError()) is False
+        assert retry_policy.should_retry(context, ArithmeticError()) == (False, 0)
 
     def test_should_retry_when_exception_is_retriable(self):
         retry_policy = RetryPolicy(allowed_retries=3, retriable_exceptions=[BufferError])
@@ -50,7 +50,7 @@ class TestRetryPolicy:
         context = Context()
         context.attempts = 3
 
-        assert retry_policy.should_retry(context, BufferError()) is True
+        assert retry_policy.should_retry(context, BufferError()) == (True, 0)
 
     def test_should_not_retry_when_exception_is_retriable_but_there_were_too_many_attempts(self):
         retry_policy = RetryPolicy(allowed_retries=3, retriable_exceptions=[BufferError])
@@ -58,7 +58,7 @@ class TestRetryPolicy:
         context = Context()
         context.attempts = 4
 
-        assert retry_policy.should_retry(context, BufferError()) is False
+        assert retry_policy.should_retry(context, BufferError()) == (False, 0)
 
     def test_should_retry_with_more_that_one_exception_type(self):
         retry_policy = RetryPolicy(allowed_retries=3, retriable_exceptions=[BufferError, ValueError])
@@ -66,8 +66,8 @@ class TestRetryPolicy:
         context = Context()
         context.attempts = 3
 
-        assert retry_policy.should_retry(context, BufferError()) is True
-        assert retry_policy.should_retry(context, ValueError()) is True
+        assert retry_policy.should_retry(context, BufferError()) == (True, 0)
+        assert retry_policy.should_retry(context, ValueError()) == (True, 0)
 
     def test_should_abort(self):
         raise_policy = RetryPolicy(abortable_exceptions=[AttributeError])
