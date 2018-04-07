@@ -41,8 +41,6 @@ assert result == 'done'
 
 Use RetryPolicy class to define the number of retries which should be made before operation fails.
 
-Retries are executed immediately - there is no backoff. Waiting before executing a retry is something we plan to implement.
-
 ```python
 from failsafe import Failsafe, RetryPolicy
 
@@ -55,6 +53,52 @@ await Failsafe(retry_policy=retry_policy).run(my_async_function)
 # raises failsafe.RetriesExhausted
 # my_async_function was called 4 times (1 regular call + 3 retries)
 ```
+
+By default, retries are executed immediately - there is no backoff. If you want to wait before
+executing a retry, you can use the `backoff` parameter:
+
+```python
+from datetime import timedelta
+from failsafe import Failsafe, RetryPolicy, Delay
+
+
+delay = Delay(timedelta(seconds=5))
+
+async def my_async_function():
+    raise Exception()  # by default, every exception will cause a retry
+
+retry_policy = RetryPolicy(allowed_retries=3, backoff=delay)
+
+await Failsafe(retry_policy=retry_policy).run(my_async_function)
+# raises failsafe.RetriesExhausted
+# my_async_function was called 4 times, waiting for 5 seconds between each call.
+```
+
+We also ship a backoff class that supports jitter and incremental delay
+
+```python
+from datetime import timedelta
+from failsafe import Failsafe, RetryPolicy, Backoff
+
+
+backoff = Backoff(
+    delay=timedelta(seconds=2),  # the initial delay
+    max_delay=timedelta(seconds=15),
+    jitter=False
+)
+
+async def my_async_function():
+    raise Exception()  # by default, every exception will cause a retry
+
+retry_policy = RetryPolicy(allowed_retries=3, backoff=backoff)
+
+await Failsafe(retry_policy=retry_policy).run(my_async_function)
+# raises failsafe.RetriesExhausted
+# my_async_function was called 4 times, waiting for 2, 4 and 8 seconds respectively.
+```
+
+It is possible to provide your own backoff logic by subclassing the
+`failsafe.retry_logic.Backoff` class and overriding the `.for_attempt(attempt)` method.
 
 It is possible to specify a particular set of exceptions that should cause a retry - any exception not contained in that set will cause immediate failure instead.
 
