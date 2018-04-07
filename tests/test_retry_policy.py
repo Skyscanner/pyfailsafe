@@ -34,7 +34,7 @@ class TestRetryPolicy:
         context = Context()
         context.attempts = 4
 
-        assert retry_policy.should_retry(context, Exception()) == (False, 0)
+        assert retry_policy.should_retry(context, Exception()) == (False, None)
 
     def test_should_not_retry_when_exception_is_not_retriable(self):
         retry_policy = RetryPolicy(allowed_retries=3, retriable_exceptions=[BufferError])
@@ -42,7 +42,7 @@ class TestRetryPolicy:
         context = Context()
         context.attempts = 3
 
-        assert retry_policy.should_retry(context, ArithmeticError()) == (False, 0)
+        assert retry_policy.should_retry(context, ArithmeticError()) == (False, None)
 
     def test_should_retry_when_exception_is_retriable(self):
         retry_policy = RetryPolicy(allowed_retries=3, retriable_exceptions=[BufferError])
@@ -58,7 +58,7 @@ class TestRetryPolicy:
         context = Context()
         context.attempts = 4
 
-        assert retry_policy.should_retry(context, BufferError()) == (False, 0)
+        assert retry_policy.should_retry(context, BufferError()) == (False, None)
 
     def test_should_retry_with_more_that_one_exception_type(self):
         retry_policy = RetryPolicy(allowed_retries=3, retriable_exceptions=[BufferError, ValueError])
@@ -79,9 +79,9 @@ class TestRetryPolicy:
             Delay(1)
 
         delay = Delay(timedelta(seconds=1))
-        assert delay.for_attempt(0) == 1.0
         assert delay.for_attempt(1) == 1.0
         assert delay.for_attempt(2) == 1.0
+        assert delay.for_attempt(3) == 1.0
 
     def test_backoff(self):
         with pytest.raises(ValueError):
@@ -94,19 +94,23 @@ class TestRetryPolicy:
             Backoff(1, timedelta(seconds=5))
 
         backoff = Backoff(timedelta(seconds=1), timedelta(seconds=5))
-        assert backoff.for_attempt(0) == 1.0
-        assert backoff.for_attempt(1) == 2.0
-        assert backoff.for_attempt(2) == 4.0
-        assert backoff.for_attempt(3) == 5.0
+
+        with pytest.raises(ValueError):
+            backoff.for_attempt(0)
+
+        assert backoff.for_attempt(1) == 1.0
+        assert backoff.for_attempt(2) == 2.0
+        assert backoff.for_attempt(3) == 4.0
+        assert backoff.for_attempt(4) == 5.0
 
     def test_backoff_jitter(self):
         random.seed(123)
         backoff = Backoff(timedelta(seconds=1), timedelta(seconds=5), jitter=True)
-        assert round(backoff.for_attempt(0), 3) == 0.052
-        assert round(backoff.for_attempt(1), 3) == 0.174
-        assert round(backoff.for_attempt(2), 3) == 1.629
-        assert round(backoff.for_attempt(3), 3) == 0.862
-        assert round(backoff.for_attempt(4), 3) == 5.0
+        assert round(backoff.for_attempt(1), 3) == 0.052
+        assert round(backoff.for_attempt(2), 3) == 0.174
+        assert round(backoff.for_attempt(3), 3) == 1.629
+        assert round(backoff.for_attempt(4), 3) == 0.862
+        assert round(backoff.for_attempt(5), 3) == 5.0
 
-        for i in range(4):
+        for i in range(1, 5):
             assert round(backoff.for_attempt(i), 3) <= 5.0
