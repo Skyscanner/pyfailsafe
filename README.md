@@ -83,7 +83,7 @@ await Failsafe(retry_policy=retry_policy).run(my_async_function)
 # TypeError is not ZeroDivisionError, so my_async_function was called just once in this example
 ```
 
-RetryPolicy instances are stateless. They can be safely shared between Failsafe instances.
+RetryPolicy instances are immutable and thread-safe. They can be safely shared between Failsafe instances.
 
 ### Failsafe call with abortable exceptions
 
