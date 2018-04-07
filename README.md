@@ -17,7 +17,9 @@ Pyfailsafe provides mechanisms for dealing with operations that inherently can f
 
 To get started using Pyfailsafe, install with
 
-    pip install pyfailsafe
+```sh
+pip install pyfailsafe
+```
 
 then read the rest of this document to learn how to use it.
 
@@ -39,9 +41,7 @@ assert result == 'done'
 
 ### Failsafe call with retries
 
-Use RetryPolicy class to define the number of retries which should be made before operation fails.
-
-Retries are executed immediately - there is no backoff. Waiting before executing a retry is something we plan to implement.
+Use `RetryPolicy` class to define the number of retries which should be made before operation fails.
 
 ```python
 from failsafe import Failsafe, RetryPolicy
@@ -55,6 +55,48 @@ await Failsafe(retry_policy=retry_policy).run(my_async_function)
 # raises failsafe.RetriesExhausted
 # my_async_function was called 4 times (1 regular call + 3 retries)
 ```
+
+By default, retries are executed immediately - there is no backoff.
+If you want to wait before executing a retry, you can use the `backoff` parameter:
+
+```python
+from datetime import timedelta
+from failsafe import Failsafe, RetryPolicy, Delay
+
+async def my_async_function():
+    raise Exception()  # by default, every exception will cause a retry
+
+delay = Delay(timedelta(seconds=5))
+retry_policy = RetryPolicy(allowed_retries=3, backoff=delay)
+
+await Failsafe(retry_policy=retry_policy).run(my_async_function)
+# raises failsafe.RetriesExhausted
+# my_async_function was called 4 times, waiting for 5 seconds between each call.
+```
+
+We also ship a `Backoff` class that supports jitter and incremental delay
+
+```python
+from datetime import timedelta
+from failsafe import Failsafe, RetryPolicy, Backoff
+
+async def my_async_function():
+    raise Exception()  # by default, every exception will cause a retry
+
+backoff = Backoff(
+    delay=timedelta(seconds=2),  # the initial delay
+    max_delay=timedelta(seconds=15),
+    jitter=False  # if True, the wait time will be random between 0 and the actual time for this attempt
+)
+retry_policy = RetryPolicy(allowed_retries=3, backoff=backoff)
+
+await Failsafe(retry_policy=retry_policy).run(my_async_function)
+# raises failsafe.RetriesExhausted
+# my_async_function was called 4 times, waiting for 2, 4 and 8 seconds respectively.
+```
+
+It is possible to provide your own backoff logic by subclassing the
+`failsafe.retry_logic.Backoff` class and overriding the `.for_attempt(attempt)` method.
 
 It is possible to specify a particular set of exceptions that should cause a retry - any exception not contained in that set will cause immediate failure instead.
 
@@ -87,7 +129,7 @@ RetryPolicy instances are immutable and thread-safe. They can be safely shared b
 
 ### Failsafe call with abortable exceptions
 
-If you need your code to be able to raise certain exceptions that should not be handled by the failsafe, 
+If you need your code to be able to raise certain exceptions that should not be handled by the failsafe,
 you can add them as abortable_exceptions in RetryPolicy. This is useful when you know that the nature of failure was
 such that consecutive calls would never succeed.
 
@@ -106,7 +148,7 @@ await Failsafe(retry_policy=retry_policy).run(my_async_function)
 
 ### Circuit breakers
 
-[Circuit breakers](http://martinfowler.com/bliki/CircuitBreaker.html) are a way of creating systems that fail-fast by temporarily disabling execution as a way of preventing system overload. 
+[Circuit breakers](http://martinfowler.com/bliki/CircuitBreaker.html) are a way of creating systems that fail-fast by temporarily disabling execution as a way of preventing system overload.
 
 ```python
 from failsafe import Failsafe, CircuitBreaker
@@ -143,7 +185,7 @@ circuit_breaker = CircuitBreaker()
 
 circuit_breaker.open()  # executions won't be allowed when circuit breaker is open
 circuit_breaker.close()
-circuit_breaker.current_state  # 'open' or 'closed' 
+circuit_breaker.current_state  # 'open' or 'closed'
 
 if circuit_breaker.allows_execution():
     try:
@@ -182,7 +224,6 @@ import aiohttp
 circuit_breaker = CircuitBreaker()
 retry_policy = RetryPolicy()
 failsafe = Failsafe(circuit_breaker=circuit_breaker, retry_policy=retry_policy)
-
 
 async def make_get_request(url):
     async def _make_get_request(_url):
@@ -253,18 +294,24 @@ Check [examples](examples) folder for comprehensive examples of how Pyfailsafe s
 
 When making changes to the module it is always a good idea to run everything within a python virtual environment to ensure isolation of dependencies.
 
-    # Python3
-    pyvenv venv
-    source venv/bin/activate
-    pip install -r requirements_test.txt
+```sh
+# Python 3.5 or greater needed
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements_test.txt
+```
 
 Unit tests are written using pytest and can be run from the root of the project with
 
-    py.test tests/ -v
+```sh
+py.test tests/ -v
+```
 
 Coding standards are maintained using the flake8 tool which will run as part of the build process. To run locally simply use:
 
-    flake8 failsafe/ tests/ examples/
+```sh
+flake8 failsafe/ tests/ examples/
+```
 
 ## Publishing
 
