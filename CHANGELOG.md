@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.3.1]
+### Changed
+- `CircuitOpen` exceptions from tasks which trigger opening the circuit will now include the `__cause__`.
+
 ## [0.3.0]
 ### Added
 - Add functionality to wait before executing a retry. There is a new `backoff` option in `RetryPolicy` which allows to define the wait time. (Thanks to @fcurella for this contribution!)
