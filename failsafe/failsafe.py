@@ -72,7 +72,10 @@ class Failsafe:
         while retry:
             if not self.circuit_breaker.allows_execution():
                 logger.debug("Circuit open, stopping execution")
-                raise CircuitOpen()
+                if recent_exception is None:
+                    raise CircuitOpen()
+                else:
+                    raise CircuitOpen() from recent_exception
             try:
                 context.attempts += 1
                 result = await callable()

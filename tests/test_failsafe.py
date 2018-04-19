@@ -41,9 +41,11 @@ def create_succeeding_operation():
     return operation
 
 
-def create_failing_operation():
+def create_failing_operation(exception=None):
     async def operation():
         operation.called += 1
+        if exception:
+            raise exception
         raise SomeRetriableException()
 
     operation.called = 0
@@ -174,8 +176,37 @@ class TestFailsafe(unittest.TestCase):
                 Failsafe(retry_policy=policy, circuit_breaker=circuit_breaker)
                 .run(failing_operation)
             )
-
         assert failing_operation.called == 2
+
+    def test_circuit_breaker_circuitopener_raises_circuitopen_with_cause(self):
+        original_exception = SomeRetriableException("My Error Message")
+        failing_operation = create_failing_operation(original_exception)
+        try:
+            policy = RetryPolicy(5, [SomeRetriableException])
+            circuit_breaker = CircuitBreaker(maximum_failures=2)
+            loop.run_until_complete(
+                Failsafe(retry_policy=policy, circuit_breaker=circuit_breaker)
+                .run(failing_operation)
+            )
+            raise Exception("Expected CircuitOpen exception")
+        except CircuitOpen as e:
+            assert e.__cause__ is original_exception
+
+    def test_circuit_breaker_opened_circuit_has_no_cause(self):
+        failing_operation = create_failing_operation()
+        try:
+            policy = RetryPolicy(5, [SomeRetriableException])
+            circuit_breaker = CircuitBreaker(maximum_failures=2)
+            circuit_breaker.open()
+
+            loop.run_until_complete(
+                Failsafe(retry_policy=policy, circuit_breaker=circuit_breaker)
+                .run(failing_operation)
+            )
+            raise Exception("Expected CircuitOpen exception")
+        except CircuitOpen as e:
+            assert e.__cause__ is None
+        assert failing_operation.called == 0
 
     def test_circuit_breaker_with_abort(self):
         aborting_operation = create_aborting_operation()
