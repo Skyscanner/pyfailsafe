@@ -263,21 +263,21 @@ from urllib.parse import urljoin
 
 from failsafe import FallbackFailsafe
 
-class PartnerSortingClient:
+class SortingClient:
     def __init__(self):
-        endpoint_main = "http://hbe-psa.eu-west-1.prod.aws.skyscanner.local"
-        endpoint_secondary = "http://hbe-psa.eu-central-1.prod.aws.skyscanner.local"
+        endpoint_main = "http://eu-west-1.sorting-service.local"
+        endpoint_secondary = "http://eu-central-1.sorting-service.local"
 
         self.fallback_failsafe = FallbackFailsafe([endpoint_main, endpoint_secondary])
 
-    async def get_deal(self, partner, market, device, hotel_id):
-        query_path = "/v1/relevance/partner/{0}/market/{1}/device/{2}/hotel/{3}".format(partner, market, device, hotel_id)
+    async def get_sorting(self, name, age):
+        query_path = "/v1/sort/name/{0}/age/{1}".format(name, age)
         return await self.fallback_failsafe.run(self._request, query_path)
 
     async def _request(self, endpoint, query_path):
         url = urljoin(endpoint, query_path)
 
-        with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession() as session:
             async with session.get(url) as resp:
                 if resp.status != 200:
                     raise Exception()
