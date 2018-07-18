@@ -67,13 +67,6 @@ class CircuitBreaker:
         self.state = _OpenState(self)
         logger.debug("Opened")
 
-    def half_open(self):
-        """
-        Sets the state of the CircuitBreaker to half open
-        """
-        self.state = _HalfOpenState(self)
-        logger.debug("Half opened")
-
     def close(self):
         """
         Sets the state of the CircuitBreaker to closed
@@ -126,7 +119,7 @@ class _OpenState:
 
     def allows_execution(self):
         if time.monotonic() > self.opened_at + self.circuit_breaker.reset_timeout_seconds:
-            self.circuit_breaker.half_open()
+            self.circuit_breaker.close()
             return True
 
         return False
@@ -139,27 +132,6 @@ class _OpenState:
 
     def get_name(self):
         return 'open'
-
-
-class _HalfOpenState:
-    """
-    A status class representing the half open state of a CircuitBreaker
-    """
-
-    def __init__(self, circuit_breaker):
-        self.circuit_breaker = circuit_breaker
-
-    def allows_execution(self):
-        return True
-
-    def record_success(self):
-        self.circuit_breaker.close()
-
-    def record_failure(self):
-        self.circuit_breaker.open()
-
-    def get_name(self):
-        return 'half-open'
 
 
 class AlwaysClosedCircuitBreaker(CircuitBreaker):

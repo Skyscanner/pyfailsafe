@@ -58,7 +58,7 @@ class TestCircuitBreaker:
         assert circuit_breaker.current_state == 'closed'
 
     @patch('time.monotonic')
-    def test_circuit_half_opens_and_closes_after_timeout(self, monotonic_mock):
+    def test_circuit_closes_again_after_timeout(self, monotonic_mock):
         circuit_breaker = CircuitBreaker(maximum_failures=1, reset_timeout_seconds=20)
 
         assert circuit_breaker.allows_execution() is True
@@ -74,33 +74,4 @@ class TestCircuitBreaker:
         monotonic_mock.return_value = 130
 
         assert circuit_breaker.allows_execution() is True
-        assert circuit_breaker.current_state == 'half-open'
-
-        circuit_breaker.record_success()
-
-        assert circuit_breaker.allows_execution() is True
         assert circuit_breaker.current_state == 'closed'
-
-    @patch('time.monotonic')
-    def test_circuit_stays_open_upon_failure_after_half_opening(self, monotonic_mock):
-        circuit_breaker = CircuitBreaker(maximum_failures=1, reset_timeout_seconds=20)
-
-        assert circuit_breaker.allows_execution() is True
-        assert circuit_breaker.current_state == 'closed'
-
-        monotonic_mock.return_value = 100
-
-        circuit_breaker.record_failure()
-
-        assert circuit_breaker.allows_execution() is False
-        assert circuit_breaker.current_state == 'open'
-
-        monotonic_mock.return_value = 130
-
-        assert circuit_breaker.allows_execution() is True
-        assert circuit_breaker.current_state == 'half-open'
-
-        circuit_breaker.record_failure()
-
-        assert circuit_breaker.allows_execution() is False
-        assert circuit_breaker.current_state == 'open'
