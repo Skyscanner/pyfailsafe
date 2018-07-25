@@ -104,3 +104,20 @@ class TestCircuitBreaker:
 
         assert circuit_breaker.allows_execution() is False
         assert circuit_breaker.current_state == 'open'
+
+    def test_half_open_state_ratio(self):
+        ratio = 0.2
+        total_executions = 1000
+
+        circuit_breaker = CircuitBreaker(half_open_ratio=ratio)
+        circuit_breaker.half_open()
+
+        results = []
+        for i in range(0, total_executions):
+            results.append(circuit_breaker.allows_execution())
+            assert circuit_breaker.current_state == 'half-open'
+
+        allowed_executions = list(filter(lambda x: x is True, results))
+
+        assert len(results) == total_executions
+        assert len(allowed_executions) == total_executions * ratio

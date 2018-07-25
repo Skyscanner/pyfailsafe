@@ -21,13 +21,17 @@ class CircuitBreaker:
     CircuitBreaker implements a way to temporally disable the execution to
     prevent an overload of the system. By default, a maximum of 2 failures are
     allowed before considering the circuit as open for a period of 60 seconds.
+    Additionally, while transitioning from open to closed, it will allow for
+    a maximum of n * `half_open_ratio requests` to go through and probe the
+    underlying system.
 
     The initial state of the CircuitBreaker is closed.
     """
 
-    def __init__(self, maximum_failures=2, reset_timeout_seconds=60):
+    def __init__(self, maximum_failures=2, reset_timeout_seconds=60, half_open_ratio=0.1):
         self.maximum_failures = maximum_failures
         self.reset_timeout_seconds = reset_timeout_seconds
+        self.half_open_ratio = half_open_ratio
 
         self.state = _ClosedState(self)
 
@@ -71,7 +75,7 @@ class CircuitBreaker:
         """
         Sets the state of the CircuitBreaker to half open
         """
-        self.state = _HalfOpenState(self)
+        self.state = _HalfOpenState(self, self.half_open_ratio)
         logger.debug("Half opened")
 
     def close(self):
@@ -143,14 +147,22 @@ class _OpenState:
 
 class _HalfOpenState:
     """
-    A status class representing the half open state of a CircuitBreaker
+    A status class representing the half open state of a CircuitBreaker. The half-open state
+    allows for up to n * `half_open_ratio` requests to go through in order to check whether the
+    underlying system has recovered or not. The first request that finishes successfully will
+    close the circuit - or open it back if it fails instead.
     """
 
-    def __init__(self, circuit_breaker):
+    def __init__(self, circuit_breaker, half_open_ratio):
         self.circuit_breaker = circuit_breaker
+        self.attempts = 0
+        self.half_open_ratio = half_open_ratio
 
     def allows_execution(self):
-        return True
+        self.attempts += 1
+        if self.attempts % 100 < 100 * self.half_open_ratio:
+            return True
+        return False
 
     def record_success(self):
         self.circuit_breaker.close()
@@ -164,7 +176,7 @@ class _HalfOpenState:
 
 class AlwaysClosedCircuitBreaker(CircuitBreaker):
     """
-    A CircuitBreaker wihch is allways closed allowing all executions.
+    A CircuitBreaker which is always closed allowing all executions.
     """
 
     def __init__(self):
