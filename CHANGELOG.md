@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.4.0]
+### Added
+- Added half-open state, thus implementing Fowler's Circuit model (https://martinfowler.com/bliki/CircuitBreaker.html) 
+
 ## [0.3.1]
 ### Changed
 - `CircuitOpen` exceptions from tasks which trigger opening the circuit will now include the `__cause__`.
