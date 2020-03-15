@@ -55,12 +55,15 @@ class Failsafe:
             circuit_breaker = AlwaysClosedCircuitBreaker()
         self.circuit_breaker = circuit_breaker
 
-    async def run(self, callable):
+    async def run(self, callable, *args, **kwargs):
         """
         Calls the callable method according to the retry_policy and the circuit_breaker
         specified in the instance.
 
         :param callable: method to call.
+        :param *args:    The original positional arguments of the method to call (<callable>).
+        :param **kwargs: The original keyword arguments of the method to call (<callable>).
+
         :raises: RetriesExhausted when the retry policy attempts has been reached.
         :raises: CircuitOpen when the circuit_breaker policy has reached the
             maximum allowed number of failures
@@ -78,7 +81,7 @@ class Failsafe:
                     raise CircuitOpen() from recent_exception
             try:
                 context.attempts += 1
-                result = await callable()
+                result = await callable(*args, **kwargs)
                 self.circuit_breaker.record_success()
                 return result
 

@@ -28,11 +28,11 @@ class GitHubClient:
         try:
             # primary url intentionally wrong to simulate failure
             primary_url = 'https://wrong_url.github.com/orgs/{}/repos'.format(github_user)
-            return await self.failsafe.run(lambda: self._request(primary_url))
+            return await self.failsafe.run(self._request, primary_url)
         except FailsafeError:
             # primary endpoint is down, call secondary as a fallback:
             fallback_url = 'https://api.github.com/orgs/{}/repos'.format(github_user)
-            return await self.failsafe_fallback.run(lambda: self._request(fallback_url))
+            return await self.failsafe_fallback.run(self._request, fallback_url)
 
     async def _request(self, url):
         with aiohttp.ClientSession() as session:

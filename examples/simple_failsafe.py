@@ -35,7 +35,7 @@ class GitHubClient:
         url = 'https://api.github.com/orgs/{}/repos'.format(github_user)
 
         try:
-            return await self.failsafe.run(lambda: self._request(url))
+            return await self.failsafe.run(self._request, url)
         except NotFoundError:
             raise UserNotFoundError("User {} was not found".format(github_user))
         except FailsafeError as e:

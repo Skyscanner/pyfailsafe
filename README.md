@@ -234,7 +234,7 @@ async def make_get_request(url):
                 return await resp.json()
 
     try:
-        return await failsafe.run(lambda: _make_get_request(url))
+        return await failsafe.run(_make_get_request, url)
     except FailsafeError:
         raise RuntimeError("Error while getting data")
 
