@@ -35,7 +35,7 @@ class GitHubClient:
             return await self.failsafe_fallback.run(self._request, fallback_url)
 
     async def _request(self, url):
-        with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession() as session:
             async with session.get(url) as resp:
                 if resp.status != 200:
                     raise Exception()

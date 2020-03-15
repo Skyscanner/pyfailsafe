@@ -42,7 +42,7 @@ class GitHubClient:
             raise GitHubClientError("Could not load repositories due to unknown error") from e
 
     async def _request(self, url):
-        with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession() as session:
             async with session.get(url) as resp:
                 if resp.status == 404:
                     raise NotFoundError()  # NotFoundError is abortable exception meaning that Failsafe will not retry
