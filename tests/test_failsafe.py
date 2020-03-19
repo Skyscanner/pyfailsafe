@@ -82,14 +82,14 @@ class TestFailsafe(unittest.TestCase):
         obtained = loop.run_until_complete(
             Failsafe().run(operation.task_with_arguments, 41, y=1)
         )
-        self.assertEqual(obtained, "{0}_42".format(Operation.__name__))
+        assert obtained == "{0}_42".format(Operation.__name__)
 
     def test_no_retry(self):
         succeeding_operation = create_succeeding_operation()
         loop.run_until_complete(
             Failsafe().run(succeeding_operation)
         )
-        self.assertEqual(succeeding_operation.called, 1)
+        assert succeeding_operation.called == 1
 
     def test_basic_retry(self):
         succeeding_operation = create_succeeding_operation()
@@ -97,7 +97,7 @@ class TestFailsafe(unittest.TestCase):
         loop.run_until_complete(
             Failsafe(retry_policy=policy).run(succeeding_operation)
         )
-        self.assertEqual(succeeding_operation.called, 1)
+        assert succeeding_operation.called == 1
 
     def test_retry_once(self):
         failing_operation = create_failing_operation()
