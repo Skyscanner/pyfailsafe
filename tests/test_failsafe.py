@@ -41,12 +41,6 @@ def create_succeeding_operation():
     return operation
 
 
-class Operation:
-    async def task_with_arguments(self, x, y=0):
-        result = x + y
-        return "{0}_{1}".format(self.__class__.__name__, result)
-
-
 def create_failing_operation(exception=None):
     async def operation():
         operation.called += 1
@@ -78,6 +72,11 @@ class SomeAbortableException(Exception):
 class TestFailsafe(unittest.TestCase):
 
     def test_failsafe_on_method_with_arguments(self):
+        class Operation:
+            async def task_with_arguments(self, x, y=0):
+                result = x + y
+                return "{0}_{1}".format(self.__class__.__name__, result)
+
         operation = Operation()
         obtained = loop.run_until_complete(
             Failsafe().run(operation.task_with_arguments, 41, y=1)
