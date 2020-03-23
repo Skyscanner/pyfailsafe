@@ -35,14 +35,14 @@ class GitHubClient:
         url = 'https://api.github.com/orgs/{}/repos'.format(github_user)
 
         try:
-            return await self.failsafe.run(lambda: self._request(url))
+            return await self.failsafe.run(self._request, url)
         except NotFoundError:
             raise UserNotFoundError("User {} was not found".format(github_user))
         except FailsafeError as e:
             raise GitHubClientError("Could not load repositories due to unknown error") from e
 
     async def _request(self, url):
-        with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession() as session:
             async with session.get(url) as resp:
                 if resp.status == 404:
                     raise NotFoundError()  # NotFoundError is abortable exception meaning that Failsafe will not retry

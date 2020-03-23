@@ -71,11 +71,24 @@ class SomeAbortableException(Exception):
 
 class TestFailsafe(unittest.TestCase):
 
+    def test_failsafe_on_method_with_arguments(self):
+        class Operation:
+            async def task_with_arguments(self, x, y=0):
+                result = x + y
+                return "{0}_{1}".format(self.__class__.__name__, result)
+
+        operation = Operation()
+        obtained = loop.run_until_complete(
+            Failsafe().run(operation.task_with_arguments, 41, y=1)
+        )
+        assert obtained == "{0}_42".format(Operation.__name__)
+
     def test_no_retry(self):
         succeeding_operation = create_succeeding_operation()
         loop.run_until_complete(
             Failsafe().run(succeeding_operation)
         )
+        assert succeeding_operation.called == 1
 
     def test_basic_retry(self):
         succeeding_operation = create_succeeding_operation()
@@ -83,6 +96,7 @@ class TestFailsafe(unittest.TestCase):
         loop.run_until_complete(
             Failsafe(retry_policy=policy).run(succeeding_operation)
         )
+        assert succeeding_operation.called == 1
 
     def test_retry_once(self):
         failing_operation = create_failing_operation()

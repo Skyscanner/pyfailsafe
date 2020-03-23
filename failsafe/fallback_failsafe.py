@@ -57,7 +57,7 @@ class FallbackFailsafe:
         recent_exception = None
         for (fallback_option, failsafe) in self.failsafes:
             try:
-                return await failsafe.run(lambda: callable(fallback_option, *args, **kwargs))
+                return await failsafe.run(callable, fallback_option, *args, **kwargs)
             except FailsafeError as e:
                 recent_exception = e
                 logger.debug("Fallback option {} failed".format(fallback_option))

@@ -1,2 +1,2 @@
-aiohttp==0.22.5
+aiohttp==3.6.2
 pytest==2.9.2
