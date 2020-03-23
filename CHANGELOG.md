@@ -1,9 +1,13 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.5.0]
+### Changed
+- Made the ``Failsafe.run()`` method accept all the ``*args`` and ``**kwargs`` from the original function.
+
 ## [0.4.0]
 ### Added
-- Added half-open state, thus implementing Fowler's Circuit model (https://martinfowler.com/bliki/CircuitBreaker.html) 
+- Added half-open state, thus implementing Fowler's Circuit model (https://martinfowler.com/bliki/CircuitBreaker.html)
 
 ## [0.3.1]
 ### Changed
