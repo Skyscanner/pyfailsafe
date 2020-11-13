@@ -211,6 +211,22 @@ failsafe = Failsafe(circuit_breaker=circuit_breaker, retry_policy=retry_policy)
 await failsafe.run(my_async_function)
 ```
 
+### RetryPolicy and CircuitBreaker events
+
+`RetryPolicy` and `CircuitBreaker` accept event handlers at construction time, such as `on_retry`, `on_retries_exhausted`, 
+`on_abort`, `on_failed_attempt` in the case of `RetryPolicy`, and `on_open`, `on_half_open`, `on_close` for 
+`CircuitBreaker`. These event handlers can be useful for things like logging or metric recording.  
+
+```python
+import logging
+from failsafe import Failsafe, CircuitBreaker, RetryPolicy
+
+logger = logging.getLogger("MyLogger")
+circuit_breaker = CircuitBreaker(on_open=lambda: logger.error("Circuit open!"))
+retry_policy = RetryPolicy(on_retry=lambda: logger.warning("Retrying..."))
+failsafe = Failsafe(retry_policy=retry_policy, circuit_breaker=circuit_breaker)
+```
+
 ### Using Pyfailsafe to make HTTP calls
 
 Failsafe is not dependent on any HTTP client library, so a function making a call has to be provided by the developer. Said function must return a coroutine.

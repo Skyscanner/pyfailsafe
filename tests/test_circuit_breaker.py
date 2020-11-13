@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from failsafe.circuit_breaker import CircuitBreaker
 
@@ -121,3 +121,34 @@ class TestCircuitBreaker:
 
         assert len(results) == total_executions
         assert len(allowed_executions) == total_executions * ratio
+
+
+class TestCircuitBreakerEvents:
+    def test_initial_state_is_closed(self):
+        on_open_mock = Mock()
+        on_half_open_mock = Mock()
+        on_close_mock = Mock()
+
+        circuit_breaker = CircuitBreaker(on_open=on_open_mock, on_half_open=on_half_open_mock, on_close=on_close_mock)
+
+        assert not on_open_mock.called
+        assert not on_half_open_mock.called
+        assert not on_close_mock.called
+
+        circuit_breaker.open()
+
+        assert on_open_mock.call_count == 1
+        assert on_half_open_mock.call_count == 0
+        assert on_close_mock.call_count == 0
+
+        circuit_breaker.half_open()
+
+        assert on_open_mock.call_count == 1
+        assert on_half_open_mock.call_count == 1
+        assert on_close_mock.call_count == 0
+
+        circuit_breaker.close()
+
+        assert on_open_mock.call_count == 1
+        assert on_half_open_mock.call_count == 1
+        assert on_close_mock.call_count == 1

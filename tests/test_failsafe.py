@@ -97,7 +97,7 @@ class TestFailsafe(unittest.TestCase):
         on_failed_attempt_mock = Mock()
         on_retries_exceeded_mock = Mock()
         policy = RetryPolicy(on_retry=on_retry_mock, on_abort=on_abort_mock, on_failed_attempt=on_failed_attempt_mock,
-                             on_retries_exceeded=on_retries_exceeded_mock)
+                             on_retries_exhausted=on_retries_exceeded_mock)
         loop.run_until_complete(
             Failsafe(retry_policy=policy).run(succeeding_operation)
         )
@@ -256,3 +256,40 @@ class TestFailsafe(unittest.TestCase):
 
         assert aborting_operation.called == 1
         assert on_abort_mock.call_count == 1
+
+    def test_safe_abort_event(self):
+        aborting_operation = create_aborting_operation()
+        on_abort_mock = Mock()
+        on_abort_mock.side_effect = Exception("ERROR!")
+
+        policy = RetryPolicy(abortable_exceptions=[SomeAbortableException], on_abort=on_abort_mock)
+
+        with pytest.raises(SomeAbortableException):
+            loop.run_until_complete(
+                Failsafe(retry_policy=policy)
+                .run(aborting_operation)
+            )
+
+        assert on_abort_mock.called
+
+    def test_safe_rest_of_events(self):
+        retries = 1
+        failing_operation = create_failing_operation()
+        on_retry_mock = Mock()
+        on_retry_mock.side_effect = Exception("ERROR!")
+        on_failed_attempt_mock = Mock()
+        on_failed_attempt_mock.side_effect = Exception("ERROR!")
+        on_retries_exhausted_mock = Mock()
+        on_retries_exhausted_mock.side_effect = Exception("ERROR!")
+        policy = RetryPolicy(retries, on_retry=on_retry_mock, on_failed_attempt=on_failed_attempt_mock,
+                             on_retries_exhausted=on_retries_exhausted_mock)
+        failsafe = Failsafe(retry_policy=policy)
+
+        with pytest.raises(RetriesExhausted):
+            loop.run_until_complete(
+                failsafe.run(failing_operation)
+            )
+
+        assert on_retry_mock.called
+        assert on_failed_attempt_mock.called
+        assert on_retries_exhausted_mock.called

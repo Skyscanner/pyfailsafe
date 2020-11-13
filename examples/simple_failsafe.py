@@ -9,9 +9,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import logging
 
 import aiohttp
 from failsafe import Failsafe, RetryPolicy, CircuitBreaker, FailsafeError
+
+
+logger = logging.getLogger(__name__)
 
 
 class GitHubClientError(Exception):
@@ -28,7 +32,9 @@ class NotFoundError(Exception):
 
 class GitHubClient:
     def __init__(self):
-        self.failsafe = Failsafe(retry_policy=RetryPolicy(allowed_retries=4, abortable_exceptions=[NotFoundError]),
+        self.failsafe = Failsafe(retry_policy=RetryPolicy(allowed_retries=4, abortable_exceptions=[NotFoundError],
+                                                          on_retry=lambda: logger.warning("Retrying..."),
+                                                          on_abort=lambda: logger.error("Aborted!")),
                                  circuit_breaker=CircuitBreaker(maximum_failures=8))
 
     async def get_repositories_by_user(self, github_user):
