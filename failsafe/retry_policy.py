@@ -61,14 +61,18 @@ class Delay(Backoff):
         super(Delay, self).__init__(delay, delay, factor=1, jitter=False)
 
 
+def _do_nothing(*args):
+    pass
+
+
 class RetryPolicy:
     """
     Model to store the number of allowed retries, the allowed retriable exceptions
     and the exceptions that should abort the failsafe run.
     """
 
-    def __init__(self, allowed_retries=3, retriable_exceptions=None, abortable_exceptions=None,
-                 backoff=None):
+    def __init__(self, allowed_retries=3, retriable_exceptions=None, abortable_exceptions=None, backoff=None,
+                 on_retry=None, on_retries_exceeded=None, on_failed_attempt=None, on_abort=None):
         """
         Constructs RetryPolicy.
 
@@ -83,6 +87,11 @@ class RetryPolicy:
         self.allowed_retries = allowed_retries
         self.retriable_exceptions = retriable_exceptions
         self.abortable_exceptions = abortable_exceptions
+
+        self.on_retry = on_retry or _do_nothing
+        self.on_retries_exceeded = on_retries_exceeded or _do_nothing
+        self.on_failed_attempt = on_failed_attempt or _do_nothing
+        self.on_abort = on_abort or _do_nothing
 
         if backoff is None:
             backoff = Delay(timedelta(0))

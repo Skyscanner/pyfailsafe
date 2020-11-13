@@ -88,16 +88,20 @@ class Failsafe:
             except Exception as e:
                 if self.retry_policy.should_abort(e):
                     logger.debug("Aborting Failsafe, exception {}".format(type(e).__name__))
+                    self.retry_policy.on_abort()
                     raise
                 recent_exception = e
                 context.errors += 1
                 retry, wait_for = self.retry_policy.should_retry(context, e)
                 self.circuit_breaker.record_failure()
+                self.retry_policy.on_failed_attempt()
 
                 if retry:
                     if wait_for:
                         logger.debug("Waiting {}".format(wait_for))
                         await asyncio.sleep(wait_for)
                     logger.debug("Retrying call")
+                    self.retry_policy.on_retry()
 
+        self.retry_policy.on_retries_exceeded()
         raise RetriesExhausted() from recent_exception

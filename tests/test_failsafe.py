@@ -92,17 +92,28 @@ class TestFailsafe(unittest.TestCase):
 
     def test_basic_retry(self):
         succeeding_operation = create_succeeding_operation()
-        policy = RetryPolicy()
+        on_retry_mock = Mock()
+        on_abort_mock = Mock()
+        on_failed_attempt_mock = Mock()
+        on_retries_exceeded_mock = Mock()
+        policy = RetryPolicy(on_retry=on_retry_mock, on_abort=on_abort_mock, on_failed_attempt=on_failed_attempt_mock,
+                             on_retries_exceeded=on_retries_exceeded_mock)
         loop.run_until_complete(
             Failsafe(retry_policy=policy).run(succeeding_operation)
         )
         assert succeeding_operation.called == 1
+        assert not on_retry_mock.called
+        assert not on_abort_mock.called
+        assert not on_failed_attempt_mock.called
+        assert not on_retries_exceeded_mock.called
 
     def test_retry_once(self):
         failing_operation = create_failing_operation()
         expected_attempts = 2
         retries = 1
-        policy = RetryPolicy(retries)
+        on_retry_mock = Mock()
+        on_failed_attempt_mock = Mock()
+        policy = RetryPolicy(retries, on_retry=on_retry_mock, on_failed_attempt=on_failed_attempt_mock)
         failsafe = Failsafe(retry_policy=policy)
 
         assert failing_operation.called == 0
@@ -113,12 +124,16 @@ class TestFailsafe(unittest.TestCase):
             )
 
         assert failing_operation.called == expected_attempts
+        assert on_retry_mock.call_count == retries
+        assert on_failed_attempt_mock.call_count == expected_attempts
 
     def test_retry_four_times(self):
         failing_operation = create_failing_operation()
         expected_attempts = 5
         retries = 4
-        policy = RetryPolicy(retries)
+        on_retry_mock = Mock()
+        on_failed_attempt_mock = Mock()
+        policy = RetryPolicy(retries, on_retry=on_retry_mock, on_failed_attempt=on_failed_attempt_mock)
         failsafe = Failsafe(retry_policy=policy)
 
         assert failing_operation.called == 0
@@ -129,6 +144,8 @@ class TestFailsafe(unittest.TestCase):
             )
 
         assert failing_operation.called == expected_attempts
+        assert on_retry_mock.call_count == retries
+        assert on_failed_attempt_mock.call_count == expected_attempts
 
     def test_retry_on_custom_exception(self):
         failing_operation = create_failing_operation()
@@ -224,8 +241,9 @@ class TestFailsafe(unittest.TestCase):
 
     def test_circuit_breaker_with_abort(self):
         aborting_operation = create_aborting_operation()
+        on_abort_mock = Mock()
 
-        policy = RetryPolicy(abortable_exceptions=[SomeAbortableException])
+        policy = RetryPolicy(abortable_exceptions=[SomeAbortableException], on_abort=on_abort_mock)
         circuit_breaker = CircuitBreaker(maximum_failures=2)
 
         circuit_breaker.record_failure = MagicMock()
@@ -237,3 +255,4 @@ class TestFailsafe(unittest.TestCase):
         circuit_breaker.record_failure.assert_not_called()
 
         assert aborting_operation.called == 1
+        assert on_abort_mock.call_count == 1
