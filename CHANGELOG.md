@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## [0.6.0]
 ### Added
 - Added event handlers to `RetryPolicy` and `CircuitBreaker`.
+- Added the `Sync` decorator allowing to use `Failsafe` from "classic" code (as in no `async`/`await` syntax)
 
 ## [0.5.0]
 ### Changed

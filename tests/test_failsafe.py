@@ -21,6 +21,7 @@ from failsafe import (
 )
 from datetime import timedelta
 
+from failsafe.failsafe import Sync
 
 loop = asyncio.get_event_loop()
 
@@ -293,3 +294,21 @@ class TestFailsafe(unittest.TestCase):
         assert on_retry_mock.called
         assert on_failed_attempt_mock.called
         assert on_retries_exhausted_mock.called
+
+
+class TestSyncFailsafe(unittest.TestCase):
+    def test_call(self):
+        method_mock = Mock()
+        sync_failsafe = Sync(Failsafe())
+        sync_failsafe.run(method_mock)
+
+        assert method_mock.called
+
+    def test_parameters_are_passed(self):
+        method_mock = Mock()
+        param1 = 1
+        param2 = "2"
+        sync_failsafe = Sync(Failsafe())
+        sync_failsafe.run(method_mock, param1, param2)
+
+        method_mock.assert_called_with(param1, param2)
