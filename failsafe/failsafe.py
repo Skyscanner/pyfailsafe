@@ -127,10 +127,10 @@ class Sync:
         self._failsafe = failsafe
 
     async def _sync_call(self, callable, *args, **kwargs):
-        callable(*args, **kwargs)
+        return callable(*args, **kwargs)
 
     async def _failsafe_run(self, callable, *args, **kwargs):
-        await self._failsafe.run(self._sync_call, callable, *args, **kwargs)
+        return await self._failsafe.run(self._sync_call, callable, *args, **kwargs)
 
     def run(self, callable, *args, **kwargs):
         """
@@ -147,6 +147,6 @@ class Sync:
         """
         coroutine = self._failsafe_run(callable, *args, **kwargs)
         if hasattr(asyncio, 'run'):
-            asyncio.run(coroutine)
+            return asyncio.run(coroutine)
         else:
-            asyncio.get_event_loop().run_until_complete(coroutine)
+            return asyncio.get_event_loop().run_until_complete(coroutine)

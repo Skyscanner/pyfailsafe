@@ -300,9 +300,10 @@ class TestSyncFailsafe(unittest.TestCase):
     def test_call(self):
         method_mock = Mock()
         sync_failsafe = Sync(Failsafe())
-        sync_failsafe.run(method_mock)
+        result = sync_failsafe.run(method_mock)
 
         assert method_mock.called
+        assert result == method_mock.return_value
 
     def test_parameters_are_passed(self):
         method_mock = Mock()
