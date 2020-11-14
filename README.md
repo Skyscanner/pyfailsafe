@@ -4,14 +4,26 @@
 
 A Python library for handling failures, heavily inspired by the Java project [Failsafe](https://github.com/jhalterman/failsafe).
 
-Pyfailsafe provides mechanisms for dealing with operations that inherently can fail, such as calls to external services. It takes advantage of the Python's coroutines and only supports async operations and Python 3.5.
+Pyfailsafe provides mechanisms for dealing with operations that inherently can fail, such as calls to external 
+services. It takes advantage of the Python's coroutines, and supports both "classic" and async operations, starting 
+from Python 3.5.
 
-* [Basic usage](#bare-failsafe-call)
-* [Retries](#failsafe-call-with-retries)
-* [Circuit breakers](#circuit-breakers)
-* [Chained calls - fallbacks](#making-http-calls-with-fallbacks)
-* [Using Pyfailsafe to make HTTP calls](#using-pyfailsafe-to-make-http-calls)
-* [Examples](#examples)
+  * [Installation](#installation)
+  * [Usage](#usage)
+    * [Bare Failsafe call](#bare-failsafe-call)
+    * [Failsafe call with retries](#failsafe-call-with-retries)
+    * [Failsafe call with abortable exceptions](#failsafe-call-with-abortable-exceptions)
+    * [Using Failsafe from "classic" code](#using-failsafe-from-classic-code)
+    * [Circuit breakers](#circuit-breakers)
+      * [CircuitBreaker interface](#circuitbreaker-interface)
+      * [Circuit breaker with retries](#circuit-breaker-with-retries)
+    * [RetryPolicy and CircuitBreaker events](#retrypolicy-and-circuitbreaker-events)
+    * [Using Pyfailsafe to make HTTP calls](#using-pyfailsafe-to-make-http-calls)
+      * [Making HTTP calls with fallbacks](#making-http-calls-with-fallbacks)
+  * [Examples](#examples)
+  * [Developing](#developing)
+  * [Publishing](#publishing)
+  * [Contributing](#contributing)
 
 ## Installation
 
