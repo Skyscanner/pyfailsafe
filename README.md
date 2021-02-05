@@ -13,7 +13,7 @@ from Python 3.5.
     * [Bare Failsafe call](#bare-failsafe-call)
     * [Failsafe call with retries](#failsafe-call-with-retries)
     * [Failsafe call with abortable exceptions](#failsafe-call-with-abortable-exceptions)
-    * [Using Failsafe from "classic" code](#using-failsafe-from-classic-code)
+    * [Using Failsafe from non\-async code](#using-failsafe-from-non-async-code)
     * [Circuit breakers](#circuit-breakers)
       * [CircuitBreaker interface](#circuitbreaker-interface)
       * [Circuit breaker with retries](#circuit-breaker-with-retries)
@@ -158,19 +158,20 @@ await Failsafe(retry_policy=retry_policy).run(my_async_function)
 # my_async_function was called 1 time (1 regular call)
 ```
 
-### Using Failsafe from "classic" code
+### Using Failsafe from non-async code
 
-The current implementation of `Failsafe` uses `async`/`await` syntax. If your code uses "classic" syntax 
-(no `async`/`await`), you can use the `Sync` decorator to use `Failsafe` from your code.
+The current default implementation of `Failsafe` uses `async`/`await` syntax. However, there's also a non-async 
+`Failsafe` under `failsafe.sync`, that will allow you to use `Failsafe` from non-async code (i.e. no `await` syntax 
+needed to call `Failsafe`).
 
 ```python
-from failsafe import Failsafe, Sync
+from failsafe.sync import Failsafe
 
-def classic_callable():
+def non_async_callable():
     ...
 
-failsafe = Sync(Failsafe(retry_policy=...))
-failsafe.run(classic_callable)
+failsafe = Failsafe(retry_policy=...)
+failsafe.run(non_async_callable)
 ```
 
 ### Circuit breakers

@@ -11,7 +11,7 @@
 # limitations under the License.
 
 import pytest
-from failsafe.failsafe import Context
+from failsafe.aio.failsafe import Context
 from failsafe.retry_policy import RetryPolicy, Delay, Backoff
 
 from datetime import timedelta
@@ -25,49 +25,58 @@ class TestRetryPolicy:
 
         context = Context()
         context.attempts = 3
+        context.recent_exception = Exception()
 
-        assert retry_policy.should_retry(context, Exception()) == (True, 0)
+        assert retry_policy.should_retry(context) == (True, 0)
 
     def test_should_not_retry_when_there_were_too_many_attempts(self):
         retry_policy = RetryPolicy(allowed_retries=3)
 
         context = Context()
         context.attempts = 4
+        context.recent_exception = Exception()
 
-        assert retry_policy.should_retry(context, Exception()) == (False, None)
+        assert retry_policy.should_retry(context) == (False, 0)
 
     def test_should_not_retry_when_exception_is_not_retriable(self):
         retry_policy = RetryPolicy(allowed_retries=3, retriable_exceptions=[BufferError])
 
         context = Context()
         context.attempts = 3
+        context.recent_exception = ArithmeticError()
 
-        assert retry_policy.should_retry(context, ArithmeticError()) == (False, None)
+        assert retry_policy.should_retry(context) == (False, 0)
 
     def test_should_retry_when_exception_is_retriable(self):
         retry_policy = RetryPolicy(allowed_retries=3, retriable_exceptions=[BufferError])
 
         context = Context()
         context.attempts = 3
+        context.recent_exception = BufferError()
 
-        assert retry_policy.should_retry(context, BufferError()) == (True, 0)
+        assert retry_policy.should_retry(context) == (True, 0)
 
     def test_should_not_retry_when_exception_is_retriable_but_there_were_too_many_attempts(self):
         retry_policy = RetryPolicy(allowed_retries=3, retriable_exceptions=[BufferError])
 
         context = Context()
         context.attempts = 4
+        context.recent_exception = BufferError()
 
-        assert retry_policy.should_retry(context, BufferError()) == (False, None)
+        assert retry_policy.should_retry(context) == (False, 0)
 
     def test_should_retry_with_more_that_one_exception_type(self):
         retry_policy = RetryPolicy(allowed_retries=3, retriable_exceptions=[BufferError, ValueError])
 
         context = Context()
         context.attempts = 3
+        context.recent_exception = BufferError()
 
-        assert retry_policy.should_retry(context, BufferError()) == (True, 0)
-        assert retry_policy.should_retry(context, ValueError()) == (True, 0)
+        assert retry_policy.should_retry(context) == (True, 0)
+
+        context.recent_exception = ValueError()
+
+        assert retry_policy.should_retry(context) == (True, 0)
 
     def test_should_abort(self):
         raise_policy = RetryPolicy(abortable_exceptions=[AttributeError])

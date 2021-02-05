@@ -99,22 +99,25 @@ class RetryPolicy:
             backoff = Delay(timedelta(0))
         self.backoff = backoff
 
-    def should_retry(self, context, exception):
+    def should_retry(self, context):
         """
         Returns a boolean indicating if a retry should be performed taking into
         account the number of attempts already performed and the retriable_exceptions.
 
         :param context: :class:`failsafe.failsafe.Context`.
-        :param exception: Exception which caused failure to be considered
-            retriable or not raised during the execution.
         """
-        should_retry = context.attempts <= self.allowed_retries and self._is_retriable_exception(exception)
+        in_retriable_exceptions = self._is_retriable_exception(context.recent_exception)
+        should_retry = context.attempts <= self.allowed_retries and in_retriable_exceptions
 
         if should_retry:
             wait_for = self.backoff.for_attempt(context.attempts)
             return True, wait_for
 
-        return False, None
+        return False, 0
+
+    def attempts_left(self, context):
+        should_retry, _ = self.should_retry(context)
+        return should_retry
 
     def should_abort(self, exception):
         """
