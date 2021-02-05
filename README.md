@@ -13,7 +13,6 @@ from Python 3.5.
     * [Bare Failsafe call](#bare-failsafe-call)
     * [Failsafe call with retries](#failsafe-call-with-retries)
     * [Failsafe call with abortable exceptions](#failsafe-call-with-abortable-exceptions)
-    * [Using Failsafe from "classic" code](#using-failsafe-from-classic-code)
     * [Circuit breakers](#circuit-breakers)
       * [CircuitBreaker interface](#circuitbreaker-interface)
       * [Circuit breaker with retries](#circuit-breaker-with-retries)
