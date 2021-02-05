@@ -56,14 +56,14 @@ class Failsafe:
             circuit_breaker = AlwaysClosedCircuitBreaker()
         self.circuit_breaker = circuit_breaker
 
-    async def run(self, coroutine, *args, **kwargs):
+    async def run(self, callable, *args, **kwargs):
         """
-        Calls the given coroutine according to the retry_policy and the circuit_breaker
+        Calls the callable method according to the retry_policy and the circuit_breaker
         specified in the instance.
 
-        :param coroutine: coroutine to call.
-        :param *args:    The original positional arguments of the coroutine to call (<coroutine>).
-        :param **kwargs: The original keyword arguments of the coroutine to call (<coroutine>).
+        :param callable: method to call.
+        :param *args:    The original positional arguments of the method to call (<callable>).
+        :param **kwargs: The original keyword arguments of the method to call (<callable>).
 
         :raises: RetriesExhausted when the retry policy attempts has been reached.
         :raises: CircuitOpen when the circuit_breaker policy has reached the
@@ -82,7 +82,7 @@ class Failsafe:
                     raise CircuitOpen() from recent_exception
             try:
                 context.attempts += 1
-                result = await coroutine(*args, **kwargs)
+                result = await callable(*args, **kwargs)
                 self.circuit_breaker.record_success()
                 return result
 
@@ -106,47 +106,3 @@ class Failsafe:
 
         _safe_call(self.retry_policy.on_retries_exceeded)
         raise RetriesExhausted() from recent_exception
-
-
-class Sync:
-    """
-    Convenience decorator class to use a `Failsafe` instance from "classic" code (as in not using `async`/`await`
-    syntax). Uses `asyncio.run()` (available in python 3.7+) or `asyncio.get_event_loop().run_until_complete()` if
-    `asyncio.run()` isn't available.
-
-    Usage:
-        ```
-        def classic_callable():
-            ...
-
-        failsafe = Sync(Failsafe(retry_policy=...))
-        failsafe.run(classic_callable)
-        ```
-    """
-    def __init__(self, failsafe):
-        self._failsafe = failsafe
-
-    async def _sync_call(self, callable, *args, **kwargs):
-        callable(*args, **kwargs)
-
-    async def _failsafe_run(self, callable, *args, **kwargs):
-        await self._failsafe.run(self._sync_call, callable, *args, **kwargs)
-
-    def run(self, callable, *args, **kwargs):
-        """
-        Calls the given method according to the retry_policy and the circuit_breaker
-        specified in the decorated Failsafe instance.
-
-        :param callable: method to call.
-        :param *args:    The original positional arguments of the method to call (<callable>).
-        :param **kwargs: The original keyword arguments of the method to call (<callable>).
-
-        :raises: RetriesExhausted when the retry policy attempts has been reached.
-        :raises: CircuitOpen when the circuit_breaker policy has reached the
-            maximum allowed number of failures
-        """
-        coroutine = self._failsafe_run(callable, *args, **kwargs)
-        if hasattr(asyncio, 'run'):
-            asyncio.run(coroutine)
-        else:
-            asyncio.get_event_loop().run_until_complete(coroutine)

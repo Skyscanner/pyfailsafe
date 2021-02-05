@@ -158,21 +158,6 @@ await Failsafe(retry_policy=retry_policy).run(my_async_function)
 # my_async_function was called 1 time (1 regular call)
 ```
 
-### Using Failsafe from "classic" code
-
-The current implementation of `Failsafe` uses `async`/`await` syntax. If your code uses "classic" syntax 
-(no `async`/`await`), you can use the `Sync` decorator to use `Failsafe` from your code.
-
-```python
-from failsafe import Failsafe, Sync
-
-def classic_callable():
-    ...
-
-failsafe = Sync(Failsafe(retry_policy=...))
-failsafe.run(classic_callable)
-```
-
 ### Circuit breakers
 
 [Circuit breakers](http://martinfowler.com/bliki/CircuitBreaker.html) are a way of creating systems that fail-fast by temporarily disabling execution as a way of preventing system overload.
