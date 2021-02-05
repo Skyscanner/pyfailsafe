@@ -13,6 +13,8 @@
 import time
 import logging
 
+from failsafe._internal import _do_nothing, _safe_call
+
 logger = logging.getLogger(__name__)
 
 
@@ -28,10 +30,15 @@ class CircuitBreaker:
     The initial state of the CircuitBreaker is closed.
     """
 
-    def __init__(self, maximum_failures=2, reset_timeout_seconds=60, half_open_ratio=0.1):
+    def __init__(self, maximum_failures=2, reset_timeout_seconds=60, half_open_ratio=0.1,
+                 on_open=None, on_half_open=None, on_close=None):
         self.maximum_failures = maximum_failures
         self.reset_timeout_seconds = reset_timeout_seconds
         self.half_open_ratio = half_open_ratio
+
+        self.on_open = on_open or _do_nothing
+        self.on_half_open = on_half_open or _do_nothing
+        self.on_close = on_close or _do_nothing
 
         self.state = _ClosedState(self)
 
@@ -70,6 +77,7 @@ class CircuitBreaker:
         """
         self.state = _OpenState(self)
         logger.debug("Opened")
+        _safe_call(self.on_open)
 
     def half_open(self):
         """
@@ -77,6 +85,7 @@ class CircuitBreaker:
         """
         self.state = _HalfOpenState(self, self.half_open_ratio)
         logger.debug("Half opened")
+        _safe_call(self.on_half_open)
 
     def close(self):
         """
@@ -84,6 +93,7 @@ class CircuitBreaker:
         """
         self.state = _ClosedState(self)
         logger.debug("Closed")
+        _safe_call(self.on_close)
 
     @property
     def current_state(self):

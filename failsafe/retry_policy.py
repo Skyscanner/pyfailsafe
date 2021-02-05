@@ -13,6 +13,8 @@
 from datetime import timedelta
 import random
 
+from failsafe._internal import _do_nothing
+
 
 class Backoff:
     """
@@ -67,8 +69,8 @@ class RetryPolicy:
     and the exceptions that should abort the failsafe run.
     """
 
-    def __init__(self, allowed_retries=3, retriable_exceptions=None, abortable_exceptions=None,
-                 backoff=None):
+    def __init__(self, allowed_retries=3, retriable_exceptions=None, abortable_exceptions=None, backoff=None,
+                 on_retry=None, on_retries_exhausted=None, on_failed_attempt=None, on_abort=None):
         """
         Constructs RetryPolicy.
 
@@ -79,10 +81,19 @@ class RetryPolicy:
             immediately and be propagated out of failsafe. If None, no exception is considered abortable.
         :param backoff: specification of the wait time between retries. Should be implementation of the Backoff class.
             If None, retries will be executed immediately.
+        :param on_retry: callable that will be invoked on a retry event
+        :param on_retries_exhausted: callable that will be invoked on a retries exhausted event
+        :param on_failed_attempt: callable that will be invoked on a failed attempt event
+        :param on_abort: callable that will be invoked on an abort event
         """
         self.allowed_retries = allowed_retries
         self.retriable_exceptions = retriable_exceptions
         self.abortable_exceptions = abortable_exceptions
+
+        self.on_retry = on_retry or _do_nothing
+        self.on_retries_exceeded = on_retries_exhausted or _do_nothing
+        self.on_failed_attempt = on_failed_attempt or _do_nothing
+        self.on_abort = on_abort or _do_nothing
 
         if backoff is None:
             backoff = Delay(timedelta(0))

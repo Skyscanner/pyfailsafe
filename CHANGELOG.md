@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.6.0]
+### Added
+- Added event handlers to `RetryPolicy` and `CircuitBreaker`.
+
 ## [0.5.0]
 ### Changed
 - Made the ``Failsafe.run()`` method accept all the ``*args`` and ``**kwargs`` from the original function.

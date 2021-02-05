@@ -4,14 +4,25 @@
 
 A Python library for handling failures, heavily inspired by the Java project [Failsafe](https://github.com/jhalterman/failsafe).
 
-Pyfailsafe provides mechanisms for dealing with operations that inherently can fail, such as calls to external services. It takes advantage of the Python's coroutines and only supports async operations and Python 3.5.
+Pyfailsafe provides mechanisms for dealing with operations that inherently can fail, such as calls to external 
+services. It takes advantage of the Python's coroutines, and supports both "classic" and async operations, starting 
+from Python 3.5.
 
-* [Basic usage](#bare-failsafe-call)
-* [Retries](#failsafe-call-with-retries)
-* [Circuit breakers](#circuit-breakers)
-* [Chained calls - fallbacks](#making-http-calls-with-fallbacks)
-* [Using Pyfailsafe to make HTTP calls](#using-pyfailsafe-to-make-http-calls)
-* [Examples](#examples)
+  * [Installation](#installation)
+  * [Usage](#usage)
+    * [Bare Failsafe call](#bare-failsafe-call)
+    * [Failsafe call with retries](#failsafe-call-with-retries)
+    * [Failsafe call with abortable exceptions](#failsafe-call-with-abortable-exceptions)
+    * [Circuit breakers](#circuit-breakers)
+      * [CircuitBreaker interface](#circuitbreaker-interface)
+      * [Circuit breaker with retries](#circuit-breaker-with-retries)
+    * [RetryPolicy and CircuitBreaker events](#retrypolicy-and-circuitbreaker-events)
+    * [Using Pyfailsafe to make HTTP calls](#using-pyfailsafe-to-make-http-calls)
+      * [Making HTTP calls with fallbacks](#making-http-calls-with-fallbacks)
+  * [Examples](#examples)
+  * [Developing](#developing)
+  * [Publishing](#publishing)
+  * [Contributing](#contributing)
 
 ## Installation
 
@@ -209,6 +220,22 @@ circuit_breaker = CircuitBreaker()
 retry_policy = RetryPolicy()
 failsafe = Failsafe(circuit_breaker=circuit_breaker, retry_policy=retry_policy)
 await failsafe.run(my_async_function)
+```
+
+### RetryPolicy and CircuitBreaker events
+
+`RetryPolicy` and `CircuitBreaker` accept event handlers at construction time, such as `on_retry`, `on_retries_exhausted`, 
+`on_abort`, `on_failed_attempt` in the case of `RetryPolicy`, and `on_open`, `on_half_open`, `on_close` for 
+`CircuitBreaker`. These event handlers can be useful for things like logging or metric recording.  
+
+```python
+import logging
+from failsafe import Failsafe, CircuitBreaker, RetryPolicy
+
+logger = logging.getLogger("MyLogger")
+circuit_breaker = CircuitBreaker(on_open=lambda: logger.error("Circuit open!"))
+retry_policy = RetryPolicy(on_retry=lambda: logger.warning("Retrying..."))
+failsafe = Failsafe(retry_policy=retry_policy, circuit_breaker=circuit_breaker)
 ```
 
 ### Using Pyfailsafe to make HTTP calls
